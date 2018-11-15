@@ -1,0 +1,25 @@
+
+experiment_name = '131210_7986_MovingObjects_5'
+prb_file = '1x1_electrode.prb'
+
+traces = dict(
+    raw_data_files=[experiment_name + '.dat'],
+    voltage_gain=100.,
+    sample_rate=40000,
+    n_channels=2, # the .prb file says we ignore the 2nd channel
+    dtype='int16',
+)
+
+spikedetekt = dict(
+    filter_low=500.,  # Low pass frequency (Hz)
+    filter_high_factor=0.95 * .5,
+    filter_butter_order=3,  # Order of Butterworth filter.
+
+    filter_lfp_low=0,  # LFP filter low-pass frequency
+    filter_lfp_high=300,  # LFP filter high-pass frequency
+)
+
+klustakwik2 = dict(
+    num_starting_clusters=4, # Start with 4 clusters
+	num_cpus=32,          # use 8 cpus
+)

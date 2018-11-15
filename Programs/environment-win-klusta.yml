@@ -1,0 +1,28 @@
+name: klusta
+dependencies:
+  - python
+  - pip
+  - numpy
+  - scipy
+  - h5py
+  - six
+  - cython
+  - ipython
+  - matplotlib
+  - pyqt=4
+  - pip:
+    - pytest
+    - requests
+    - responses
+
+    - tqdm
+    - click
+    - traitlets
+    - joblib
+    - pyopengl
+
+    - vispy
+    - klustakwik2
+    - klusta
+    - phy
+    - phycontrib
