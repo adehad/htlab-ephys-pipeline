@@ -1,0 +1,21 @@
+channel_groups = {
+    # Shank index.
+    0:
+        {
+            # List of channels to keep for spike detection.
+            'channels': list(range(1)), # Not 5 as, 5th (index 4 in python), is the PhotoDiode Channel
+
+            # Adjacency graph. Dead channels will be automatically discarded
+            # by considering the corresponding subgraph.
+            'graph': [
+					(0, 0),
+            ],
+
+            # 2D positions of the channels, only for visualization purposes
+            # in KlustaViewa. The unit doesn't matter.
+            'geometry': {
+                # 1: (0, 0), # Visual Stimuli (PhotoDiode) alignment signal
+                0: (0, 10),
+            }
+    }
+}
