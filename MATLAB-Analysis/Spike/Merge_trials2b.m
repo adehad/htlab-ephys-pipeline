@@ -12,7 +12,7 @@ fSamp = 40000; % not actually needed for script
 % for data collected via SpikeGL, we can incorporate MetafileRead to
 % extract this information
 
-%% conpile file names
+%% compile file names
 namePart1 = '150526__MovingObjects_'; %'131210_7986q_MovingObjects_'; '131217_8014p_MovingObjects_'; %'131222_8021_MovingObjects_'; %'131210_7986_MovingObjects_';131228_8078_MovingObjects_  '131230_DE10_MovingObjects_'
 numFiles = [1:10]; % note: an array
 namePart2 = '.bin';

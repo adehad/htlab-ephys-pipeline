@@ -1,64 +1,76 @@
-function OEtoBin(pathToDataFolder,dataFolderNames, overwriteFiles ...
-                 dataChan,adcChan,nChansDesired, ...
-                 interlaceChans,invertChans,concatCh) 
-%% Saves OPEN-EPHYS Data as Binary & Interlaces, Adds Dummy channels, Saves ADC 
+function OEtoBin(pathToDataFolder,dataFolderNames,overwriteFiles, ...
+    dataCh,adcCh,nChDesired,interlaceCh,invertCh,concatCh)
+%% Saves OPEN-EPHYS Data as Binary & Interlaces, Adds Dummy channels, Saves ADC
 % Last Updated: 11/11/2018
 %
-% INPUT: dataFolderNames (Array of folders with the OpenEphys Data e.g.  .continuous)
-%        dataChan       (Number array that corresponds to : CH<> files
-%                                                   leave empty if none)
-%        adcChan        (Number array that corresponds to : ADC<> files
-%                                                   leave empty if none)
-%        nChansDesired  (if greater than length(dataChan) will pad with
-%                           dummy channels of 1s)
-%        interlaceChans (if you want to interlace channel data)
-%        invertChans    (1 if you want to invert)
-%        concatCh       (1 if dataRAW channels followed by adc channels)
+% INPUT:
+%       pathToDataFolder (path to OpenEphys Data folders (dataFolderNames).
+%           Uses current directory if argument is empty)
+%       dataFolderNames (string array of folders with OpenEphys data to
+%           merge, 'all' chooses all folders in pathToDataFolder or current
+%           dir)
+%       dataCh          (Number array that corresponds to : CH<> files
+%                                                  leave empty if none)
+%       adcCh           (Number array that corresponds to : ADC<> files
+%                                                  leave empty if none)
+%       nChDesired      (if greater than length(dataChan) will pad with
+%                          dummy channels of 1s)
+%       interlaceCh     (if you want to interlace channel data)
+%       invertCh        (1 if you want to invert)
+%       concatCh        (1 if dataRAW channels followed by adc channels)
 %
-% OUTPUT:                 Stored is the same folder as dataFolderNames
+% OUTPUT:                 Stored in the same folder as dataFolderNames
 %      dataFolderName.bin (will groups channels to a single binary file)
 %                           each row is a different channel
 %      dataFolderName_converted.bin (above, but with dummy channels)
 %                                    each row is a different channel
 %      dataFolderName_ADC.bin        (ADC channels, never padded)
 %      dataFolderName_timeStamps.mat (timestamp information - extracted from ADC )
-% 
+%
 % Functions required at the end of the file: load_open_ephys_data() & filesize()
 
 % -----------------------------------------------
 %                   INPUT
 % -----------------------------------------------
-
-   
-% Name File
 clear newFileName newFileNameADC
-namePart1 = dataFolderNames; 
-    namePart1 = namePart1(namePart1 ~= '\'); namePart1(namePart1 ~= '/');
-%     namePart1 = namePart1(namePart1 ~= filesep); % More robust way -
-%     filsep is matlab command to get file separator
-namePart1b = '_padded';
-namePart1c = '_interlaced';
-namePart1d = '_concat';
+
+% IF using all folders in path
+if strcmp(dataFolderNames, 'all') || strcmp(dataFolderNames, 'ALL')
+    if ~isempty(pathToDataFolder)
+        files = dir(pathToDataFolder);
+    else
+        files = dir;
+    end
+    dirFlags = [files.isdir] & ~strcmp({files.name},'.') & ~strcmp({files.name},'..');
+    dataFolders = files(dirFlags);
+    dataFolderNames = convertCharsToStrings({dataFolders.name});
+end
+
+% Name File
+namePart1 = dataFolderNames;
+namePart1 = namePart1(namePart1 ~= filesep);% namePart1(namePart1 ~= '/');
 namePart2 = '.bin';
-    % DATA FILE
-newFileName = [ namePart1, namePart1b, namePart2 ];
-newFileNameINTERLACED = [ namePart1, namePart1c, namePart2 ];
-newFileNameCONCAT = [ namePart1, namePart1d, namePart2 ];
-    % ADC FILE
+% DATA FILE
+newFileName = [ namePart1, '_padded', namePart2 ];
+newFileNameINTERLACED = [ namePart1, '_interlaced', namePart2 ];
+newFileNameCONCAT = [ namePart1, '_concat', namePart2 ];
+% ADC FILE
 newFileNameADC = [ namePart1,'_ADC', namePart2 ];
-newFileNameADC = newFileNameADC(newFileNameADC ~= '\'); newFileNameADC(newFileNameADC ~= '/');
+newFileNameADC = newFileNameADC(newFileNameADC ~= filesep); %newFileNameADC(newFileNameADC ~= '/');
 
 if ~isempty(pathToDataFolder) % if user is specifying a path to the data folder - i.e. not empty pathToDataFolder
-    newFileName           = [pathToDataFolder,newFileName];
-    newFileNameINTERLACED = [pathToDataFolder,newFileNameINTERLACED];
-    newFileNameCONCAT     = [pathToDataFolder,newFileNameCONCAT];
-    newFileNameADC        = [pathToDataFolder,newFileNameADC];
+    if pathToDataFolder(end) ~= filesep
+        pathToDataFolder = [pathToDataFolder, filesep];
+    end
+    newFileName           = [pathToDataFolder, newFileName];
+    newFileNameINTERLACED = [pathToDataFolder, newFileNameINTERLACED];
+    newFileNameCONCAT     = [pathToDataFolder, newFileNameCONCAT];
+    newFileNameADC        = [pathToDataFolder, newFileNameADC];
 end
 
-if isfile('Data processing pipeline table.docx') % If file exists end function unless overwriteFiles bit is set to 1
-    
+if isfile('Data processing pipeline table.docx') && overwriteFiles ~= 1 % If file exists end function unless overwriteFiles bit is set to 1
+    return
 end
-
 
 % Create Files using mem
 % fileID = fopen('records.dat','w'); % this would be newFileNameADC
@@ -69,61 +81,57 @@ end
 % fclose(fileID);
 % binaryFile{1} = memmapfile('records.dat','Format','int16') ;
 
-
 % Clear temp variables
 clear temp tempADC
 
-if ~isempty(dataChan)               % If not empty
-    for ii=1:length(dataChan)       % DATA LOAD
-        [temp(ii,:), ~, ~] = load_open_ephys_data([pathToDataFolder,dataFolderName,'100_CH',num2str(dataChan(ii)),'.continuous']);
-        disp(['finished loading Ch : ', num2str(dataChan(ii))]);
-    end 
+if ~isempty(dataCh)               % If not empty
+    for ii=1:length(dataCh)       % DATA LOAD
+        [temp(ii,:), ~, ~] = load_open_ephys_data([pathToDataFolder,dataFolderName,'100_CH',num2str(dataCh(ii)),'.continuous']);
+        disp(['finished loading Ch : ', num2str(dataCh(ii))]);
+    end
     
     % Create new bin file [DATA]
     clear dataRAW
-    initVar = nChansDesired;
-    dataRAW = ones(initVar, length(temp),'int16');
-
-    temp = int16(temp);
-    dataRAW(1:size(temp,1),:) = temp(:,:)*((-1)^(invertChans));
-
-    dataRAW = int16(dataRAW);
+    dataRAW = ones(nChDesired, length(temp),'int16');
     
+    temp = int16(temp);
+    dataRAW(1:size(temp,1),:) = temp(:,:)*((-1)^(invertCh));
+    
+    %dataRAW = int16(dataRAW);
     
     % save new bin file [DATA]
     fileID = fopen([pathToDataFolder,dataFolderName,newFileName],'w');
     fwrite(fileID, dataRAW, 'int16','l'); % little endian write
     fclose(fileID);
-
+    
     if fileID > 0
         disp('Successfully saved new data');
     else
         disp('The file could not be saved, check if newFileName is legal')
     end
-
-    if interlaceChans==1
-        if length(dataChan)/2 == round(length(dataChan)/2) % is it an integer
+    
+    if interlaceCh==1
+        if isAnInteger(length(dataCh)/2) % is it an integer
             
-            temp2 = zeros(length(dataChan)/2, size(temp,2)*2 );
-            for kk=1:length(dataChan)/2
+            temp2 = zeros(length(dataCh)/2, size(temp,2)*2 );
+            for kk=1:length(dataCh)/2
                 temp2(kk,1:2:end) = temp(kk,:);
-                temp2(kk,2:2:end) = temp(kk+(length(dataChan)/2),:);
+                temp2(kk,2:2:end) = temp(kk+(length(dataCh)/2),:);
             end
-
+            
             % Create new bin file
             clear dataINT
-            initVar = nChansDesired;
-            dataINT = ones(initVar, length(temp2),'int16');
-
+            dataINT = ones(nChDesired, length(temp2),'int16');
+            
             temp2 = int16(temp2);
             dataINT(1:size(temp2,1),:) = temp2(:,:);
-            dataINT = int16(dataINT);
-
+            %dataINT = int16(dataINT);
+            
             % save new bin file
             fileID = fopen([pathToDataFolder,dataFolderName,newFileNameINTERLACED],'w');
             fwrite(fileID, dataINT, 'int16','l'); % little endian write
             fclose(fileID);
-
+            
             if fileID > 0
                 disp('Successfully saved new data');
             else
@@ -139,54 +147,54 @@ else
     disp('Empty dataChan')
 end
 
-if ~isempty(adcChan)               % If not empty
-    for ii=1:length(adcChan)        % ADC LOAD
-        [tempADC(ii,:), timeStamps, ~] = load_open_ephys_data([pathToDataFolder,dataFolderName,'100_ADC',num2str(adcChan(ii)),'.continuous']);
-        disp(['finished loading ADC : ', num2str(adcChan(ii))]);
-    end 
+if ~isempty(adcCh)               % If not empty
+    for ii=1:length(adcCh)        % ADC LOAD
+        [tempADC(ii,:), timeStamps, ~] = load_open_ephys_data([pathToDataFolder,dataFolderName,'100_ADC',num2str(adcCh(ii)),'.continuous']);
+        disp(['finished loading ADC : ', num2str(adcCh(ii))]);
+    end
     
     save([namePart1,'_timeStamps.mat'],'timeStamps')
     
     if sum( mean( (tempADC) - double(int16(tempADC)) ,2) > 0.001 ) % mean(,2) - uses 2nd dimension i.e. columns  &  sum - in case of multiple channels where only one is bad
         warning([ newline, ...
-                 'The variation of the data is too small for integer ', ...
-                 'quantisation, mean quantisation error is: ', num2str(mean( (tempADC) - double(int16(tempADC)) )), ...
-                 newline, 'Multiplying data by 1000']);
+            'The variation of the data is too small for integer ', ...
+            'quantisation, mean quantisation error is: ', num2str(mean( (tempADC) - double(int16(tempADC)) )), ...
+            newline, 'Multiplying data by 1000']);
         tempADC = tempADC*1e3;
     end
     
     % Create new bin file [ADC] - Note: Does not get inverted
     clear adcRAW
-    initVar2 = length(adcChan);
-    adcRAW = zeros(initVar2, length(tempADC),'int16'); 
-
-    tempADC = int16(tempADC); 
+    nChDesired2 = length(adcCh);
+    adcRAW = zeros(nChDesired2, length(tempADC),'int16');
+    
+    tempADC = int16(tempADC);
     adcRAW(1:size(tempADC,1),:) = tempADC(:,:);
-
-    adcRAW = int16(adcRAW); 
+    
+    %adcRAW = int16(adcRAW);
     
     % save new bin file [ADC]
     fileID = fopen([pathToDataFolder,dataFolderName,newFileNameADC],'w');
     fwrite(fileID, adcRAW, 'int16','l'); % little endian write
     fclose(fileID);
-
+    
     if fileID > 0
         disp('Successfully saved new ADC data');
     else
         disp('The file could not be saved, check if the newFileNameADC is legal')
     end
-
+    
 else
     disp('Empty adcChan')
 end
 
 clear temp tempADC
 
-if concatCh == 1 & ~isempty(dataChan)
+if concatCh == 1 && ~isempty(dataCh) %this was &
     fileID = fopen([pathToDataFolder,dataFolderName,newFileNameCONCAT],'w');
     fwrite(fileID, cat(1,dataRAW,adcRAW), 'int16','l'); % little endian write
     fclose(fileID);
-
+    
     if fileID > 0
         disp('Successfully saved concatenated data');
     else
@@ -276,7 +284,7 @@ SPIKE_PREALLOC_INTERVAL = 1e6;
 
 if strcmp(filetype, 'events')
     
-    disp(['Loading events file...']);
+    disp('Loading events file...');
     
     index = 0;
     
@@ -394,7 +402,7 @@ elseif strcmp(filetype, 'continuous')
         
         if nsamples ~= SAMPLES_PER_RECORD && version >= 0.1
             
-            disp(['  Found corrupted record...searching for record marker.']);
+            disp('  Found corrupted record...searching for record marker.');
             
             % switch to searching for record markers
             
@@ -408,7 +416,7 @@ elseif strcmp(filetype, 'continuous')
                 
                 last_ten_bytes(10) = double(byte);
                 
-                if last_ten_bytes(10) == RECORD_MARKER(end);
+                if last_ten_bytes(10) == RECORD_MARKER(end)
                     
                     sq_err = sum((last_ten_bytes - RECORD_MARKER).^2);
                     
@@ -474,26 +482,26 @@ elseif strcmp(filetype, 'continuous')
     if version >= 0.1
         
         for record = 1:length(info.ts)
-
+            
             ts_interp = info.ts(record):info.ts(record)+info.nsamples(record);
-
+            
             timestamps(current_sample+1:current_sample+info.nsamples(record)) = ts_interp(1:end-1);
-
+            
             current_sample = current_sample + info.nsamples(record);
         end
     else % v0.0; NOTE: the timestamps for the last record will not be interpolated
         
-         for record = 1:length(info.ts)-1
-
+        for record = 1:length(info.ts)-1
+            
             ts_interp = linspace(info.ts(record), info.ts(record+1), info.nsamples(record)+1);
-
+            
             timestamps(current_sample+1:current_sample+info.nsamples(record)) = ts_interp(1:end-1);
-
+            
             current_sample = current_sample + info.nsamples(record);
-         end
+        end
         
     end
-
+    
     
     %-----------------------------------------------------------------------
     %--------------------------- SPIKE DATA --------------------------------
@@ -501,7 +509,7 @@ elseif strcmp(filetype, 'continuous')
     
 elseif strcmp(filetype, 'spikes')
     
-    disp(['Loading spikes file...']);
+    disp('Loading spikes file...');
     
     index = 0;
     
@@ -545,7 +553,7 @@ elseif strcmp(filetype, 'spikes')
         if current_percent >= last_percent+10
             last_percent=current_percent;
             fprintf(' %d%%',current_percent);
-        end;
+        end
         
         idx = 0;
         
@@ -557,7 +565,7 @@ elseif strcmp(filetype, 'spikes')
         if (version == 0.3)
             event_size = fread(fid, 1, 'uint32', 0, 'l');
             idx = idx + 4;
-            ts = fread(fid, 1, 'int64', 0, 'l'); 
+            ts = fread(fid, 1, 'int64', 0, 'l');
             idx = idx + 8;
         elseif (version >= 0.4)
             timestamps(current_spike) = fread(fid, 1, 'int64', 0, 'l');
@@ -565,21 +573,21 @@ elseif strcmp(filetype, 'spikes')
             ts_software = fread(fid, 1, 'int64', 0, 'l');
             idx = idx + 8;
         end
-            
+        
         if (version < 0.4)
             if (version >= 0.1)
                 timestamps(current_spike) = fread(fid, 1, 'int64', 0, 'l');
             else
                 timestamps(current_spike) = fread(fid, 1, 'uint64', 0, 'l');
             end
-
+            
             idx = idx + 8;
         end
         
         info.source(current_spike) = fread(fid, 1, 'uint16', 0, 'l');
         
         idx = idx + 2;
-
+        
         num_channels = fread(fid, 1, 'uint16', 0, 'l');
         num_samples = fread(fid, 1, 'uint16', 0, 'l');
         
@@ -633,7 +641,7 @@ elseif strcmp(filetype, 'spikes')
     fprintf('\n')
     for ch = 1:num_channels % scale the waveforms
         data(:, :, ch) = double(data(:, :, ch)-32768)./(channel_gains(ch)/1000);
-    end;
+    end
     
     data = data(1:current_spike,:,:);
     timestamps = timestamps(1:current_spike);
@@ -642,7 +650,7 @@ elseif strcmp(filetype, 'spikes')
     info.thresh = info.thresh(1:current_spike);
     
     if version >= 0.2
-        info.recNum = info.recNum(1:current_spike); 
+        info.recNum = info.recNum(1:current_spike);
     end
     
     if version >= 0.4
@@ -659,7 +667,7 @@ fclose(fid); % close the file
 
 if (isfield(info.header,'sampleRate'))
     if ~ischar(info.header.sampleRate)
-      timestamps = timestamps./info.header.sampleRate; % convert to seconds
+        timestamps = timestamps./info.header.sampleRate; % convert to seconds
     end
 end
 
@@ -674,3 +682,5 @@ fseek(fid,0,'bof');
 
 end
 
+
+isAnInteger = @(x) isfinite(x) & x==floor(x);
