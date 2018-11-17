@@ -1,8 +1,18 @@
 %% Extracts spike times to _sortedmat
 
 
-
-extractTrialUnits();
+sortedType = 'kilosort';
+sortOutputFolder = 'C:\Users\Adehad\Desktop\dragonFlyUROP\Code\KiloSort\sample data\181108\preAutoMerge';
+file = '181108';
+startTrial = 1;
+csvName = [];
+clusterType = 'unsorted';
+filename.sortOutput= extractTrialUnits(sortedType,...           % sorting Program used
+                                       sortOutputFolder, ...    % location of sorting output
+                                       file, ....               % ['YYMMDD' ; 'XYZ.kwik'] - XYZ.kwik is only if you are using klusta
+                                       startTrial, ...          % YYMMDD_X - where is is starting number
+                                       csvName, ...             % Name of merge_info csv
+                                       clusterType);            % ['XYZ' ; 'ABC'] - rows containing different cluster types to keep - note: depends on your manual clustering - leave empty if you want to keep all of them
 
 %%
 filename.raw=['C:\Users\Adehad\Desktop\dragonFlyUROP\Code\KiloSort\sample data\150526\Tetrode test data\150526__MovingObjects_1.bin'];
