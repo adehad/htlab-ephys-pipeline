@@ -1,9 +1,7 @@
 function extractUnitsFileName = extractTrialUnits(sortedType,sortOutputFolder, file, startTrial, csvName, clusterType)
 %%% COPY PASTE JOB FOR NOW
 % sortedType = klusta or kilosort
-% file = list of files ? maybe not needed
-%       % MUST BE YYMMDD_XX format
-%       % USE KWIK FILE NAME IF 'klusta'
+% file = [ YYMMDD ; KWIK FILE]      % KWIK file only needed if 'klusta'
 % csvName = merge_info.csv % can also contain the path e.g. C:\folder\merge_info.csv
 % clusterType = array of ones to extract e.g. good, unsorted
 % Example Usage:
