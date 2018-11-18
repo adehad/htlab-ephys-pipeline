@@ -29,6 +29,7 @@ function OEtoBin(pathToDataFolder,dataFolderNames,overwriteFiles, ...
 %
 % Functions required at the end of the file: load_open_ephys_data() & filesize()
 
+% shorthand functions
 isAnInteger = @(x) isfinite(x) & x == floor(x);
 str2char = @(x) convertStringsToChars(x);
 char2str = @(x) convertCharsToStrings(x);
@@ -48,7 +49,7 @@ if strcmp(dataFolderNames, 'all') || strcmp(dataFolderNames, 'ALL')
     dataFolderNames = char2str({dataFolders.name})';
 end
 
-% file naming
+% output file naming
 namePart1 = erase(dataFolderNames,filesep);
 dataFolderNames = namePart1 + filesep;
 namePart2 = '.bin';
@@ -61,7 +62,8 @@ newNameMERGED       = ['data_merged', namePart2];
 newNameMETA         = 'merge_info.csv';
 %newFileNameCONCAT  = dataFolderNames + namePart1 + '_concat' + namePart2;
 
-if ~isempty(pathToDataFolder) % if user is specifying a path to the data folder - i.e. not empty pathToDataFolder
+% if user is specifying a path to the data folder - i.e. not current folder
+if ~isempty(pathToDataFolder)
     if pathToDataFolder(end) ~= filesep
         pathToDataFolder = [pathToDataFolder, filesep];
     end
@@ -83,7 +85,11 @@ end
 % fclose(fileID);
 % binaryFile{1} = memmapfile('records.dat','Format','int16') ;
 
+% data channel extraction
 if ~isempty(dataCh)
+    % allows appending of merging data
+    mergeLock = 1;
+    
     for ii=1:length(dataFolderNames)
         clear tempData
         for jj=1:length(dataCh)
@@ -94,7 +100,8 @@ if ~isempty(dataCh)
         end
         tempData = int16(tempData);
         
-        if interlaceCh==1
+        % interlacing, if the option was enabled
+        if interlaceCh
             if isAnInteger(length(dataCh)/2) % is it an integer
                 tempData = zeros(length(dataCh)/2, size(tempData,2)*2 );
                 for kk=1:length(dataCh)/2
@@ -124,40 +131,43 @@ if ~isempty(dataCh)
         % create new split data .bin file
         formattedData = ones(nChDesired,length(tempData),'int16');
         formattedData(1:size(tempData,1),:) = tempData*(-1)^invertCh;
-        %dataRAW = int16(formattedData);
+        formattedData = int16(formattedData);
 
-        % save new split data .bin file
+        % save new split data .bin file, check for overwrites
         if ~fileLock
             fwrite(fileID, formattedData, 'int16','l'); % little endian write
             fclose(fileID);
-            if fileID > 0 %does this work?
-                disp('Successfully saved split data');
-            else
-                warning('The split data could not be saved, check if newFileName is legal')
+            if fileID < 0
+                warning('The split data could not be saved')
             end
         else
             warning('File exists and will not be overwritten');
         end
         
-        if mergeCh == 1
+        % save merged data, check for overwrites
+        if mergeCh
+            % get size of each split
             fileSizeList(ii) = length(formattedData);
-            if isfile(newNameMERGED)
+            
+            if ~mergeLock
+                fileID = fopen(newNameMERGED,'a');
+            elseif isfile(newNameMERGED)
                 if overwriteFiles
                     fileID = fopen(newNameMERGED,'w');
-                    fileLock = 0;
+                    mergeLock = 0;
                 else
                     warning('File exists and will not be overwritten');
-                    fileLock = 1;
+                    mergeLock = 1;
                 end
             else
-                fileID = fopen(newNameMERGED,'a');
-                fileLock = 0;
+                fileID = fopen(newNameMERGED,'w');
+                mergeLock = 0;
             end
-            if ~fileLock
-                fileID = fopen(newNameMERGED,'a');
+            
+            if ~mergeLock
                 fwrite(fileID, formattedData, 'int16','l');
                 fclose(fileID);
-                if fileID < 0 %does this work?
+                if fileID < 0
                     warning('The merged data could not be saved')
                 end
             else
@@ -166,26 +176,20 @@ if ~isempty(dataCh)
         end
     end
     
-    if mergeCh == 1
-        if overwriteFiles || ~isfile(newNameMETA)
-            fileID = fopen(newNameMETA,'w');
-            fileLock = 0;
-        else
-            fileLock = 1;
-        end
-        if ~fileLock
-            formatSpec = '%s, is ,%.0f, samples long\n';
-            fprintf(fileID,formatSpec,[namePart1'; string(fileSizeList)]);
-            fclose(fileID);
-        else
-            warning('File exists and will not be overwritten');
-        end
+    % save merging metadata, check for overwrites
+    if ~mergeLock
+        fileID = fopen(newNameMETA,'w');
+        formatSpec = '%s, is ,%.0f, samples long\n';
+        fprintf(fileID,formatSpec,[namePart1'; string(fileSizeList)]);
+        fclose(fileID);
+    elseif mergeCh
+        warning('File exists and will not be overwritten');
     end
 else
     warning('Empty dataCh')
 end
 
-
+% adc channel extraction
 if ~isempty(adcCh)
     for ii=1:length(dataFolderNames)
         clear tempADC
@@ -195,8 +199,9 @@ if ~isempty(adcCh)
                     str2char(dataFolderNames(ii)),'100_ADC',num2str(adcCh(jj)),'.continuous']);
             %disp(['finished loading ADC : ', num2str(adcCh(jj))]);
         end
-
-        if sum( mean( (tempADC) - double(int16(tempADC)) ,2) > 0.001 ) % mean(,2) - uses 2nd dimension i.e. columns  &  sum - in case of multiple channels where only one is bad
+        
+        % mean(,2) column mean - in case of multiple channels where only one is bad
+        if sum( mean( (tempADC) - double(int16(tempADC)) ,2) > 0.001 )
             warning(['The variation of the data is too small for integer ', ...
                 'quantisation, mean quantisation error is: ', num2str(mean( (tempADC) - double(int16(tempADC)) )), ...
                 newline, 'Multiplying data by 1000...']);
@@ -207,15 +212,16 @@ if ~isempty(adcCh)
         % create new adc .bin file - Note: Does not get inverted
         formattedADC = zeros(length(adcCh), length(tempADC),'int16');
         formattedADC(1:size(tempADC,1),:) = tempADC(:,:);
-        %adcRAW = int16(adcRAW);
+        formattedADC = int16(formattedADC);
 
-        % save new adc .bin file
+        % save new adc .bin file and timestamps, check for overwrites
         if overwriteFiles || ~isfile(newNameADC(ii))
             fileID = fopen(newNameADC(ii),'w');
             fileLock = 0;
         else
             fileLock = 1;
         end
+        
         if ~fileLock
             save(newNameTS(ii),'timeStamps')
             fwrite(fileID, formattedADC, 'int16','l'); % little endian write
