@@ -1,28 +1,25 @@
 %% Converting Open-Ephs Data (organised in folders) to Binary Files needed for Spike Sorting
-clear pathToDataFolder dataFolderName
-% Change Folder separator from '\' to '/' if running on Linux
-% You MUST end the folder names with the folder separator    
-    pathToDataFolder = '';  % If script already can reach dataFolder, set to ''
-    dataFolderName = ['181108',]; 
-        % Array
-        
-% Set paramters of data
-% Data Channel(s)   - 100_CH<>.continuous files
-    dataChan = [];     % Array
-% PhotoDiode Channel    - 100_ADC<>.continuous files
-    adcChan = [1];     % Array
 
-% Set parameters of output
-    nChansDesired = 1; % How many signal channels needed
-                       % Must be larger or equal to number of channels in dataChan
-                       % If larger, dummy channels are padded with 1s
-    interlaceChans = 0; % 1 = yes I want to interlace
-                        % by default the length(dataChan) is dividen by 2 and
-                        % the second half interlaces into the first
-                        % change order of interlacing by changing order of
-                        % elements in dataChan array
-    invertChans = 1; % 1 = NO, -1 = INVERT
+% Folder separator: Windows = '\' Linux = '/'
+    pathToDataFolder    = 'E:\Box Sync\DragonVision_DanielKo\Data\Ephys\testEnv';   % If script already can reach dataFolder, set to ''
+    dataFolderNames     = 'all';% String array (DOUBLE QUOTES) such as ["181108",...] OR 'all' 
+    overwriteFiles      = 1;    % 1 = overwrite, 0 = do not overwrite
+    
+% Data Channel(s) - 100_CH<>.continuous files
+    dataCh              = 3:5;  % Array
+% PhotoDiode Channel - 100_ADC<>.continuous files
+    adcCh               = 1;    % Array
+    
+% Output parameters
+    nChDesired          = 4;    % Number of signal channels needed
+                                % Must be larger or equal to number of channels in dataChan
+                                % If larger, dummy channels are padded with 1s
+    interlaceCh         = 0;    % 1 = interlace, 0 = do not interlace
+                                % by default the length(dataChan) is divided by 2 and
+                                % the second half interlaces into the first
+                                % change order of interlacing by changing order of
+                                % elements in dataChan array
+    invertCh            = 0;    % 1 = invert, 0 = do not invert
+    mergeCh             = 1;    % 1 = merge data, 0 = do not merge data
 
-    concatCh = 1; % 1 = Yes concatenate, anything else = No
-
-OEtoBin_wrapper();
+OEtoBin(pathToDataFolder,dataFolderNames,overwriteFiles,dataCh,adcCh,nChDesired,interlaceCh,invertCh,mergeCh)

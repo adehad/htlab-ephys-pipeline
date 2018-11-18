@@ -1,5 +1,5 @@
 function OEtoBin(pathToDataFolder,dataFolderNames,overwriteFiles, ...
-    dataCh,adcCh,nChDesired,interlaceCh,invertCh,concatCh)
+    dataCh,adcCh,nChDesired,interlaceCh,invertCh,mergeCh)
 %% Saves OPEN-EPHYS Data as Binary & Interlaces, Adds Dummy channels, Saves ADC
 % Last Updated: 11/11/2018
 %
@@ -17,7 +17,7 @@ function OEtoBin(pathToDataFolder,dataFolderNames,overwriteFiles, ...
 %                          dummy channels of 1s)
 %       interlaceCh     (if you want to interlace channel data)
 %       invertCh        (1 if you want to invert)
-%       concatCh        (1 if dataRAW channels followed by adc channels)
+%       mergeCh         (1 if you want merged data output)
 %
 % OUTPUT:                 Stored in the same folder as dataFolderNames
 %      dataFolderName.bin (will groups channels to a single binary file)
@@ -29,47 +29,49 @@ function OEtoBin(pathToDataFolder,dataFolderNames,overwriteFiles, ...
 %
 % Functions required at the end of the file: load_open_ephys_data() & filesize()
 
+isAnInteger = @(x) isfinite(x) & x == floor(x);
+str2char = @(x) convertStringsToChars(x);
+char2str = @(x) convertCharsToStrings(x);
+
 % -----------------------------------------------
 %                   INPUT
 % -----------------------------------------------
-clear newFileName newFileNameADC
-
-% IF using all folders in path
+% Find folders if using all folders in path
 if strcmp(dataFolderNames, 'all') || strcmp(dataFolderNames, 'ALL')
     if ~isempty(pathToDataFolder)
-        files = dir(pathToDataFolder);
+        filesInPath = dir(pathToDataFolder);
     else
-        files = dir;
+        filesInPath = dir;
     end
-    dirFlags = [files.isdir] & ~strcmp({files.name},'.') & ~strcmp({files.name},'..');
-    dataFolders = files(dirFlags);
-    dataFolderNames = convertCharsToStrings({dataFolders.name});
+    folderFlags = [filesInPath.isdir] & ~strcmp({filesInPath.name},'.') & ~strcmp({filesInPath.name},'..');
+    dataFolders = filesInPath(folderFlags);
+    dataFolderNames = char2str({dataFolders.name})';
 end
 
-% Name File
-namePart1 = dataFolderNames;
-namePart1 = namePart1(namePart1 ~= filesep);% namePart1(namePart1 ~= '/');
+% file naming
+namePart1 = erase(dataFolderNames,filesep);
+dataFolderNames = namePart1 + filesep;
 namePart2 = '.bin';
-% DATA FILE
-newFileName = [ namePart1, '_padded', namePart2 ];
-newFileNameINTERLACED = [ namePart1, '_interlaced', namePart2 ];
-newFileNameCONCAT = [ namePart1, '_concat', namePart2 ];
-% ADC FILE
-newFileNameADC = [ namePart1,'_ADC', namePart2 ];
-newFileNameADC = newFileNameADC(newFileNameADC ~= filesep); %newFileNameADC(newFileNameADC ~= '/');
+
+newName             = dataFolderNames + namePart1 + '_padded' + namePart2;
+newNameINTERLACED   = dataFolderNames + namePart1 + '_interlaced' + namePart2;
+newNameADC          = dataFolderNames + namePart1 + '_ADC' + namePart2;
+newNameTS           = dataFolderNames + namePart1 + '_timestamps.mat';
+newNameMERGED       = ['data_merged', namePart2];
+newNameMETA         = 'merge_info.csv';
+%newFileNameCONCAT  = dataFolderNames + namePart1 + '_concat' + namePart2;
 
 if ~isempty(pathToDataFolder) % if user is specifying a path to the data folder - i.e. not empty pathToDataFolder
     if pathToDataFolder(end) ~= filesep
         pathToDataFolder = [pathToDataFolder, filesep];
     end
-    newFileName           = [pathToDataFolder, newFileName];
-    newFileNameINTERLACED = [pathToDataFolder, newFileNameINTERLACED];
-    newFileNameCONCAT     = [pathToDataFolder, newFileNameCONCAT];
-    newFileNameADC        = [pathToDataFolder, newFileNameADC];
-end
-
-if isfile('Data processing pipeline table.docx') && overwriteFiles ~= 1 % If file exists end function unless overwriteFiles bit is set to 1
-    return
+    newName             = pathToDataFolder + newName;
+    newNameINTERLACED   = pathToDataFolder + newNameINTERLACED;
+    newNameADC          = pathToDataFolder + newNameADC;
+    newNameTS           = pathToDataFolder + newNameTS;
+    newNameMERGED       = [pathToDataFolder, newNameMERGED];
+    newNameMETA         = [pathToDataFolder, newNameMETA];
+    %newFileNameCONCAT  = pathToDataFolder + newFileNameCONCAT;
 end
 
 % Create Files using mem
@@ -81,127 +83,167 @@ end
 % fclose(fileID);
 % binaryFile{1} = memmapfile('records.dat','Format','int16') ;
 
-% Clear temp variables
-clear temp tempADC
-
-if ~isempty(dataCh)               % If not empty
-    for ii=1:length(dataCh)       % DATA LOAD
-        [temp(ii,:), ~, ~] = load_open_ephys_data([pathToDataFolder,dataFolderName,'100_CH',num2str(dataCh(ii)),'.continuous']);
-        disp(['finished loading Ch : ', num2str(dataCh(ii))]);
-    end
-    
-    % Create new bin file [DATA]
-    clear dataRAW
-    dataRAW = ones(nChDesired, length(temp),'int16');
-    
-    temp = int16(temp);
-    dataRAW(1:size(temp,1),:) = temp(:,:)*((-1)^(invertCh));
-    
-    %dataRAW = int16(dataRAW);
-    
-    % save new bin file [DATA]
-    fileID = fopen([pathToDataFolder,dataFolderName,newFileName],'w');
-    fwrite(fileID, dataRAW, 'int16','l'); % little endian write
-    fclose(fileID);
-    
-    if fileID > 0
-        disp('Successfully saved new data');
-    else
-        disp('The file could not be saved, check if newFileName is legal')
-    end
-    
-    if interlaceCh==1
-        if isAnInteger(length(dataCh)/2) % is it an integer
-            
-            temp2 = zeros(length(dataCh)/2, size(temp,2)*2 );
-            for kk=1:length(dataCh)/2
-                temp2(kk,1:2:end) = temp(kk,:);
-                temp2(kk,2:2:end) = temp(kk+(length(dataCh)/2),:);
+if ~isempty(dataCh)
+    for ii=1:length(dataFolderNames)
+        clear tempData
+        for jj=1:length(dataCh)
+            % load data
+            [tempData(jj,:), ~, ~] = load_open_ephys_data([pathToDataFolder,...
+                str2char(dataFolderNames(ii)),'100_CH',num2str(dataCh(jj)),'.continuous']);
+            %disp(['finished loading Ch : ', num2str(dataCh(jj))]);
+        end
+        tempData = int16(tempData);
+        
+        if interlaceCh==1
+            if isAnInteger(length(dataCh)/2) % is it an integer
+                tempData = zeros(length(dataCh)/2, size(tempData,2)*2 );
+                for kk=1:length(dataCh)/2
+                    tempData(kk,1:2:end) = tempData(kk,:);
+                    tempData(kk,2:2:end) = tempData(kk+(length(dataCh)/2),:);
+                end
+            else
+                warning(['InterlaceCh set to 1, but not enough channels to'...
+                    'interlace. Skipping interlacing...'])
             end
             
-            % Create new bin file
-            clear dataINT
-            dataINT = ones(nChDesired, length(temp2),'int16');
-            
-            temp2 = int16(temp2);
-            dataINT(1:size(temp2,1),:) = temp2(:,:);
-            %dataINT = int16(dataINT);
-            
-            % save new bin file
-            fileID = fopen([pathToDataFolder,dataFolderName,newFileNameINTERLACED],'w');
-            fwrite(fileID, dataINT, 'int16','l'); % little endian write
-            fclose(fileID);
-            
-            if fileID > 0
-                disp('Successfully saved new data');
+            if overwriteFiles || ~isfile(newNameINTERLACED(ii))
+                fileID = fopen(newNameINTERLACED(ii),'w');
+                fileLock = 0;
             else
-                disp('The file could not be saved, check if the newFileNameINTERLACED is legal')
+                fileLock = 1;
             end
         else
-            warning('interlaceChans set to 1, but not enough channels to interlace')
-            disp('skipping interlacing')
+            if overwriteFiles || ~isfile(newName(ii))
+                fileID = fopen(newName(ii),'w');
+                fileLock = 0;
+            else
+                fileLock = 1;
+            end
+        end
+        
+        % create new split data .bin file
+        formattedData = ones(nChDesired,length(tempData),'int16');
+        formattedData(1:size(tempData,1),:) = tempData*(-1)^invertCh;
+        %dataRAW = int16(formattedData);
+
+        % save new split data .bin file
+        if ~fileLock
+            fwrite(fileID, formattedData, 'int16','l'); % little endian write
+            fclose(fileID);
+            if fileID > 0 %does this work?
+                disp('Successfully saved split data');
+            else
+                warning('The split data could not be saved, check if newFileName is legal')
+            end
+        else
+            warning('File exists and will not be overwritten');
+        end
+        
+        if mergeCh == 1
+            fileSizeList(ii) = length(formattedData);
+            if isfile(newNameMERGED)
+                if overwriteFiles
+                    fileID = fopen(newNameMERGED,'w');
+                    fileLock = 0;
+                else
+                    warning('File exists and will not be overwritten');
+                    fileLock = 1;
+                end
+            else
+                fileID = fopen(newNameMERGED,'a');
+                fileLock = 0;
+            end
+            if ~fileLock
+                fileID = fopen(newNameMERGED,'a');
+                fwrite(fileID, formattedData, 'int16','l');
+                fclose(fileID);
+                if fileID < 0 %does this work?
+                    warning('The merged data could not be saved')
+                end
+            else
+                warning('File exists and will not be overwritten');
+            end
         end
     end
     
+    if mergeCh == 1
+        if overwriteFiles || ~isfile(newNameMETA)
+            fileID = fopen(newNameMETA,'w');
+            fileLock = 0;
+        else
+            fileLock = 1;
+        end
+        if ~fileLock
+            formatSpec = '%s, is ,%.0f, samples long\n';
+            fprintf(fileID,formatSpec,[namePart1'; string(fileSizeList)]);
+            fclose(fileID);
+        else
+            warning('File exists and will not be overwritten');
+        end
+    end
 else
-    disp('Empty dataChan')
+    warning('Empty dataCh')
 end
 
-if ~isempty(adcCh)               % If not empty
-    for ii=1:length(adcCh)        % ADC LOAD
-        [tempADC(ii,:), timeStamps, ~] = load_open_ephys_data([pathToDataFolder,dataFolderName,'100_ADC',num2str(adcCh(ii)),'.continuous']);
-        disp(['finished loading ADC : ', num2str(adcCh(ii))]);
+
+if ~isempty(adcCh)
+    for ii=1:length(dataFolderNames)
+        clear tempADC
+        for jj=1:length(adcCh)
+            % load adc data
+            [tempADC(jj,:), timeStamps, ~] = load_open_ephys_data([pathToDataFolder,...
+                    str2char(dataFolderNames(ii)),'100_ADC',num2str(adcCh(jj)),'.continuous']);
+            %disp(['finished loading ADC : ', num2str(adcCh(jj))]);
+        end
+
+        if sum( mean( (tempADC) - double(int16(tempADC)) ,2) > 0.001 ) % mean(,2) - uses 2nd dimension i.e. columns  &  sum - in case of multiple channels where only one is bad
+            warning(['The variation of the data is too small for integer ', ...
+                'quantisation, mean quantisation error is: ', num2str(mean( (tempADC) - double(int16(tempADC)) )), ...
+                newline, 'Multiplying data by 1000...']);
+            tempADC = tempADC*1e3;
+        end
+        tempADC = int16(tempADC);
+
+        % create new adc .bin file - Note: Does not get inverted
+        formattedADC = zeros(length(adcCh), length(tempADC),'int16');
+        formattedADC(1:size(tempADC,1),:) = tempADC(:,:);
+        %adcRAW = int16(adcRAW);
+
+        % save new adc .bin file
+        if overwriteFiles || ~isfile(newNameADC(ii))
+            fileID = fopen(newNameADC(ii),'w');
+            fileLock = 0;
+        else
+            fileLock = 1;
+        end
+        if ~fileLock
+            save(newNameTS(ii),'timeStamps')
+            fwrite(fileID, formattedADC, 'int16','l'); % little endian write
+            fclose(fileID);
+            if fileID > 0
+                disp('Successfully saved new ADC data');
+            else
+                disp('The file could not be saved, check if the newFileNameADC is legal')
+            end
+        else
+            warning('File exists and will not be overwritten');
+        end
     end
-    
-    save([namePart1,'_timeStamps.mat'],'timeStamps')
-    
-    if sum( mean( (tempADC) - double(int16(tempADC)) ,2) > 0.001 ) % mean(,2) - uses 2nd dimension i.e. columns  &  sum - in case of multiple channels where only one is bad
-        warning([ newline, ...
-            'The variation of the data is too small for integer ', ...
-            'quantisation, mean quantisation error is: ', num2str(mean( (tempADC) - double(int16(tempADC)) )), ...
-            newline, 'Multiplying data by 1000']);
-        tempADC = tempADC*1e3;
-    end
-    
-    % Create new bin file [ADC] - Note: Does not get inverted
-    clear adcRAW
-    nChDesired2 = length(adcCh);
-    adcRAW = zeros(nChDesired2, length(tempADC),'int16');
-    
-    tempADC = int16(tempADC);
-    adcRAW(1:size(tempADC,1),:) = tempADC(:,:);
-    
-    %adcRAW = int16(adcRAW);
-    
-    % save new bin file [ADC]
-    fileID = fopen([pathToDataFolder,dataFolderName,newFileNameADC],'w');
-    fwrite(fileID, adcRAW, 'int16','l'); % little endian write
-    fclose(fileID);
-    
-    if fileID > 0
-        disp('Successfully saved new ADC data');
-    else
-        disp('The file could not be saved, check if the newFileNameADC is legal')
-    end
-    
 else
-    disp('Empty adcChan')
+    warning('Empty adcCh')
 end
 
-clear temp tempADC
-
-if concatCh == 1 && ~isempty(dataCh) %this was &
-    fileID = fopen([pathToDataFolder,dataFolderName,newFileNameCONCAT],'w');
-    fwrite(fileID, cat(1,dataRAW,adcRAW), 'int16','l'); % little endian write
-    fclose(fileID);
-    
-    if fileID > 0
-        disp('Successfully saved concatenated data');
-    else
-        disp('The file could not be saved, check if the newFileNameCONCAT is legal')
-    end
-end
-
+% if concatCh == 1 && ~isempty(dataCh) %this was &
+%     fileID = fopen([pathToDataFolder,dataFolderName,newFileNameCONCAT],'w');
+%     fwrite(fileID, cat(1,dataRAW,adcRAW), 'int16','l'); % little endian write
+%     fclose(fileID);
+%     
+%     if fileID > 0
+%         disp('Successfully saved concatenated data');
+%     else
+%         disp('The file could not be saved, check if the newFileNameCONCAT is legal')
+%     end
+% end
 
 end
 
@@ -681,6 +723,3 @@ filesize = ftell(fid);
 fseek(fid,0,'bof');
 
 end
-
-
-isAnInteger = @(x) isfinite(x) & x==floor(x);
