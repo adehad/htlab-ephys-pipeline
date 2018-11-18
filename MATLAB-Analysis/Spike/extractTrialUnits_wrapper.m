@@ -43,7 +43,8 @@ m.msec      = m.sRateHz/1000; % conversion factor from ms time to sample number
                                    
 %% Extract PD data
 m.fps = 360; % (projector frame rate)*3  (*3 for RGB)
-m.pdthr = 3e3; % Can set now, or comment out to set graphically in function 
+% m.pdthr = 3e3; % Can set now, or comment out to set graphically in function 
+m.pdthr = 3; % Daniel's data 
 [m] = extractTrialADC_PD(filename.raw, ... % Binary File
                         m, ....     % metafile struct, m
                         'test.mat' ); % filename to store output, leave as [] if you don't want to save
