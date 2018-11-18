@@ -15,6 +15,7 @@ filename.sortOutput= extractTrialUnits(sortedType,...           % sorting Progra
                                        csvName, ...             % Name of merge_info csv
                                        clusterType);            % ['XYZ' ; 'ABC'] - rows containing different cluster types to keep - note: depends on your manual clustering - leave empty if you want to keep all of them
 
+filename.sortOutput = [sortOutputFolder, filename.sortOutput];   
 %% Establish Metafile struct
 filename.raw=['C:\PATH\TO\THE\BINARY\150526\Tetrode test data\150526__MovingObjects_1.bin'];
 filename.sortOutput=['C:\PATH\TO\THE\SORTED\OUTPUT\150526\Tetrode test data\150526_01_sorted.mat'];
