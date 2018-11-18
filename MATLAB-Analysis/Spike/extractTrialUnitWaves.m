@@ -12,6 +12,18 @@ block = 1e6;         % block size for loading data
 esize = 16;          % ?
 
 %% set up some parameters in structure m
+
+% Get binary filesize
+fid = fopen(rawBinary,'r');
+if fid > 0
+    fseek(fid,0,'eof');
+    m.fileSizeBytes = ftell(fid);
+    fseek(fid,0,'bof');
+else
+    fclose(fid);
+    error(['Could not open binary file: ', rawBinary])
+end
+
 esize_msec  = esize*m.msec; % in units of sample pts
 esize_bytes = esize_msec*m.nChans*m.dbytes; % in units of bytes
 dlen        = m.fileSizeBytes/(m.dbytes*m.nChans);
@@ -34,15 +46,6 @@ x = [];
 waves = [];             
 
 blocklen_k = 1e6;
-fid = fopen(rawBinary,'r');
-if fid > 0
-    fseek(fid,0,'eof');
-    m.fileSizeBytes = ftell(fid);
-    fseek(fid,0,'bof');
-else
-    fclose(fid);
-    error(['Could not open binary file: ', rawBinary])
-end
 
 lastblock = floor(dlen/trueblock) + 1;
 spikesFound = [];
@@ -57,8 +60,8 @@ for k = 1:lastblock  % go to the last block
     
     x = fread(fid,[m.nChans blocklen_k],'int16'); % load one block at a time
     
-    for cc=1:length(m.ech)  % Filder Ephys Channels
-        x(cc,:) = splitconv(x(m.ech(cc),:),m.el_f);
+    for cc=m.ech(1):m.ech(end)  % Filter Ephys Channels
+        x(cc,:) = splitconv(x(cc,:),m.el_f);
     end
 
     % get electrode data from sorted output files
