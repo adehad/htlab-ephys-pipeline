@@ -35,8 +35,11 @@ if strcmpi(sortedType,'kilosort') % case insensitive srtcmp
     % This part of the script must be run insde the kilosort output directory
     spike_times = readNPY('spike_times.npy');
     spike_clusters = readNPY('spike_clusters.npy');
-    spike_times = unique(spike_times); % To overcome KiloSort issue of duplication
     
+    % To overcome KiloSort issue of duplication  
+    duplAmount = length(spike_times)/length(unique(spike_times)); %  number of times spike time is duplicated
+    spike_times = spike_times(1:duplAmount:end); 
+    spike_clusters = spike_clusters(1:duplAmount:end);
     %% Find Cluster groupings
     if isfile('cluster_groups.csv') % i.e. file exists
         cluster_groups = tdfread('cluster_groups.csv');
