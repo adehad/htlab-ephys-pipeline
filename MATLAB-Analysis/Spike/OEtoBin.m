@@ -60,7 +60,6 @@ newNameADC          = dataFolderNames + namePart1 + '_ADC' + namePart2;
 newNameTS           = dataFolderNames + namePart1 + '_timestamps.mat';
 newNameMERGED       = ['data_merged', namePart2];
 newNameMETA         = 'merge_info.csv';
-%newFileNameCONCAT  = dataFolderNames + namePart1 + '_concat' + namePart2;
 
 % if user is specifying a path to the data folder - i.e. not current folder
 if ~isempty(pathToDataFolder)
@@ -73,17 +72,7 @@ if ~isempty(pathToDataFolder)
     newNameTS           = pathToDataFolder + newNameTS;
     newNameMERGED       = [pathToDataFolder, newNameMERGED];
     newNameMETA         = [pathToDataFolder, newNameMETA];
-    %newFileNameCONCAT  = pathToDataFolder + newFileNameCONCAT;
 end
-
-% Create Files using mem
-% fileID = fopen('records.dat','w'); % this would be newFileNameADC
-% if fileID == -1
-%   error(['The script was unable to generate a valid file ID, verify that filenames below are valid', newline, ...
-%           newFileName, newFileNameADC]);
-% end
-% fclose(fileID);
-% binaryFile{1} = memmapfile('records.dat','Format','int16') ;
 
 % data channel extraction
 if ~isempty(dataCh)
@@ -238,19 +227,6 @@ if ~isempty(adcCh)
 else
     warning('Empty adcCh')
 end
-
-% if concatCh == 1 && ~isempty(dataCh) %this was &
-%     fileID = fopen([pathToDataFolder,dataFolderName,newFileNameCONCAT],'w');
-%     fwrite(fileID, cat(1,dataRAW,adcRAW), 'int16','l'); % little endian write
-%     fclose(fileID);
-%     
-%     if fileID > 0
-%         disp('Successfully saved concatenated data');
-%     else
-%         disp('The file could not be saved, check if the newFileNameCONCAT is legal')
-%     end
-% end
-
 end
 
 %%%% OPEN EPHYS DATA LOAD FUNCTION
