@@ -38,7 +38,7 @@ char2str = @(x) convertCharsToStrings(x);
 %                   INPUT
 % -----------------------------------------------
 % Find folders if using all folders in path
-if strcmp(dataFolderNames, 'all') || strcmp(dataFolderNames, 'ALL')
+if strcmpi(dataFolderNames, 'all')
     if ~isempty(pathToDataFolder)
         filesInPath = dir(pathToDataFolder);
     else
