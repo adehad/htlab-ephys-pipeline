@@ -1,7 +1,8 @@
-function [m,s] = extractTrialUnitWaves(rawBinary, extractUnitsFileName, m, outputFileName )
+function [m,s] = extractTrialUnitWaves(rawBinary, extractUnitsFileName, m, spike_screen_bit, outputFileName )
 %%%% A. Haddad, H. Lin
 %%%% INPUT: 
 %%%%     % Path can also be added to filenames of rawBinary / extractUnitsFileName
+% spike_screen_bit  - 1: if you want to do secondary template matching
 % if outputFileName = [], it will not save this function's data as a mat
 %% Check Required Functions
 % Appended to the end of this fuction
@@ -11,7 +12,7 @@ spikewin = 1;        % size in ms to crop around spikes
 block = 1e6;         % block size for loading data
 esize = 16;          % ?
 
-spike_screen_bit = 1;
+% spike_screen_bit = 0;
 
 %% set up some parameters in structure m
 
@@ -123,7 +124,7 @@ for k = 1:lastblock  % go to the last block
     for ss=1:length(b_spikes) % go  through each spike in the block and assign them into units; extract spike waveform +-1ms around peak
         tempEl = spike_times(row(ss),col(ss));
             % Temporary storage of element in spike_times - i.e. location of spike
-        tempIdx = [ (int64(tempEl)-b_Offset-m.spikewin):(int64(tempEl)-b_Offset+m.spikewin+1) ];
+        tempIdx = [ (int64(tempEl)-b_Offset-m.spikewin-1):(int64(tempEl)-b_Offset+m.spikewin) ];
             % Temporary indexes storing where in the loaded data x, to take
             % waveform data , +1 so even number 
             
@@ -195,21 +196,14 @@ if spike_screen_bit == 1
         for ss=1:size(tempWaves,1) 
             trace=tempWaves(ss,:,:); % Select one spike waveform at a time
             trace = permute(trace, [3 2 1]); % permute to row=electrode sites, column=timepoint, page=spikes
-            [matches_ind, match_extract] = TemplateMatch2(trace, tempWaves, m.sRateHz);
+            [matches_ind, match_extract] = TemplateMatch3(trace, tempWaves, m.sRateHz);
             
             s_tempSpikes=cat(1,s_tempSpikes, ~isempty(match_extract)); % Create a logical array of whether the template is a good match or not
         end
         s.([ 'unit2_', validClusterNumbers{ii} ]) = boolean(s_tempSpikes); 
             % Only units that match the template are stored as true
-        fprintf(['Finished Unit: ', validClusterNumbers{ii}]);
-    end
-
-%     spikes = cat(1,spikes, s_tempSpikes);
-%     waves = cat(1,waves, s_tempWaves);
-%     s.([ 'cell_', clus_name ]) = cat(1,s.([ 'cell_', clus_name ]), spikes); % For channels X spike elements X spike format
-%     s.([ 'waves_', clus_name ]) = cat(1,s.([ 'waves_', clus_name ]), waves); %               
-else
-%     s.([ 'waves_', clus_name ]) = cat(1,s.([ 'waves_', clus_name ]), tempWaves); %       waves = cat(1,waves, tempWaves);
+        fprintf(['Finished Unit: ', validClusterNumbers{ii}, '\n']);
+    end            
 end 
 fprintf('... done! \n');
     
@@ -227,7 +221,7 @@ end
 
 
 
-%%%% TemplateMatch2
+%%%% TemplateMatch3
 %%%% Huai-Ti Lin [Nov 2018]
 %%%% This script scan through the input trace for template waves
 %%%% INPUT: temp_waves, trace
@@ -235,14 +229,14 @@ end
 %%%% trace must be longer than the template
 %%%% version 2 expects multi-channle trace and template
 
-function [matches2, match_wave2] = TemplateMatch2(trace,temp_waves,sRate,task_type,match_thd2,plot_bit)
+function [matches2, match_wave2] = TemplateMatch3(trace,temp_waves,sRate,task_type,match_thd2,plot_bit)
 if ~exist('match_thd2') || isempty(match_thd2);     match_thd2 = [0.2 0.4]; end % Set threshold for the peak match default  
 if ~exist('plot_bit')   || isempty(plot_bit);       plot_bit = 0;           end % Plotting
 if ~exist('task_type')  || isempty(task_type);      task_type = 0;          end % 1: for recentering and 0: for no recentering.
 if ~exist('sRate')      || isempty(sRate);          sRate = 40e3;           end % Defalt samping rate for NI-DAQ 40k; OpenEphys 30k
 
-t_crop_bit = 0; % 1: crop the template around peak to reduce the matching length
-
+t_crop_bit = 1; % 1: crop the template around peak to reduce the matching length
+spikeWidth = 0.5; % ms estimated width of an spike - will crop the template to this size around the peak location
 %% acquire template info
 n_ch=size(trace,1); %check how many channels
 if size(temp_waves,1)==1
@@ -256,17 +250,18 @@ else %if a pack of example waveforms were given
 end
 
 % reformate template into 2D matrix for analysis purpose
-template = permute(template, [3 2 1]); template = template(:,:,1);%
-temp_p2p = permute(temp_p2p, [3 2 1]); temp_p2p = temp_p2p(:,:,1);%
-temp_Std = permute(temp_Std, [3 2 1]); temp_Std = temp_Std(:,:,1);%
-[p2p msc]=sort(temp_p2p,'descend');
-% % crop template
-% if t_crop_bit ==1;
-%     spikeWidth = 0.5; %ms estimated width of an spike
-%     crop_half = round((spikeWidth/(1000/sRate))/2); %samples to get before and after the peak 
-%     [pk_ind pk]=min(template,
-%     template = template(:,)
-% end
+template = permute(template, [3 2 1]); template = template(:,:,1);% rows: channels, columns: channel elements
+temp_p2p = permute(temp_p2p, [3 2 1]); temp_p2p = temp_p2p(:,:,1);% channels: peak-peak for each channel
+temp_Std = permute(temp_Std, [3 2 1]); temp_Std = temp_Std(:,:,1);% rows: channels, columns: std for each channel's elements
+[p2p msc]=sort(temp_p2p,'descend'); % p2p actual value of p2p, msc is the original elment in temp_p2p that had that p2p value
+% figure; plot(template(:,:)'); pause % debugging to see original template
+% crop template
+if t_crop_bit ==1
+    crop_half = round((spikeWidth/(1000/sRate))/2); %samples to get before and after the peak 
+    peakLoc = size(template,2)/2; % by default the extract wave's peak is centered about the peak    
+    template = template(:,  peakLoc-crop_half-1:peakLoc+crop_half );    % crop template to size - negative peak still at middle of this array !
+%     figure; plot(template(:,:)'); pause % debugging to see croppped template
+end
 
 %% match parameters
 r1=1; %ref_err=sum(abs((template+(temp_p2p/2))-template));
@@ -337,3 +332,13 @@ end
 
 
 end
+
+
+%%%% Debug Plot
+%%%% AH [Nov 2018]
+%%%% Given a list of numbers corresponding to units, will plot before and
+%%%% after
+%%%% INPUT: temp_waves, trace
+%%%% OUTPUT: matches2, match_wave2 [index from the trace that matches]
+%%%% trace must be longer than the template
+%%%% version 2 expects multi-channle trace and template

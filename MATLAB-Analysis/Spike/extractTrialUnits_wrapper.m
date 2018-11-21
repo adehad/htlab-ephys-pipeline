@@ -40,8 +40,9 @@ m.msec      = m.sRateHz/1000; % conversion factor from ms time to sample number
 [m,s] = extractTrialUnitWaves(filename.raw, ... % Binary File
                       filename.sortOutput, ...  % _sorted.mat file
                       m, ...                    % metafile struct, m
+                      1, ...                    % 1: if you want to do secondary template matching
                       []);              % filename to store output, leave as [] if you don't want to save
-                                   
+                                                           
 %% Extract PD data
 m.fps = 360; % (projector frame rate)*3  (*3 for RGB)
 % m.pdthr = 3e3; % Can set now, or comment out to set graphically in function (telemetry)
