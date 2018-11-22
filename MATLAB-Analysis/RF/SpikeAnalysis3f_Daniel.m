@@ -16,7 +16,6 @@ if ~exist('rasterplot.m','file');   reqFuncStr=strcat(reqFuncStr,'rasterplot.m, 
 if ~exist('plot_dir_ade.m','file');  reqFuncStr=strcat(reqFuncStr,'plot_dir_ade.m (can replace with plot), ');            end
 if ~exist('plotellipse.m','file');  reqFuncStr=strcat(reqFuncStr,'plotellipse.m, ');            end
 
-
 if ~strcmp(reqFuncStr,'')
 error(['The following functions could not be found in the search path:', newline, reqFuncStr])
 end

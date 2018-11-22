@@ -52,7 +52,7 @@ m.spikewin  = spikewin*m.msec; % window to crop around spikes
     % Redefine trial_spikes (in s) to spike_times - only include selected units spike_times
     spike_times = [];
     for ii=1:length(validFieldNames)
-        spike_times = cat(1, spike_times, s.([ 'unit_', validClusterNumbers{ii} ]));
+        spike_times = cat(1, spike_times, s.units{validClusterNumbers{ii}});
     end
     spike_times = sort(spike_times); % sorts in ascending order - i.e. increasing spike times
     
@@ -180,9 +180,9 @@ waves = permute(waves, [3 2 1]);
 %% Add waveforms to the struct s
     % Add the waves to the struct - can be overridden by secondary spike sorting below
 for ii=1:length(validFieldNames)
-    unitWaves = ismember(spike_times, s.([ 'unit_', validClusterNumbers{ii} ]) );
+    unitWaves = ismember(spike_times, s.units{validClusterNumbers{ii}});
 
-    s.([ 'waves_', num2str(validClusterNumbers{ii},'%02i') ]) = waves(unitWaves,:,:); % For spikes   X spike elements X channels
+    s.waves{validClusterNumbers{ii}} = waves(unitWaves,:,:); % For spikes   X spike elements X channels
 end
 
 %% Perform Secondary Spike Sorting
@@ -192,7 +192,7 @@ if spike_screen_bit == 1
     % Go through each spike AGAIN to do secondary sorting
     for ii=1:length(validFieldNames)
         s_tempSpikes=[];
-        tempWaves = s.([ 'waves_', validClusterNumbers{ii} ]); % Compute template from these waveforms
+        tempWaves = s.waves{validClusterNumbers{ii}}; % Compute template from these waveforms
         for ss=1:size(tempWaves,1) 
             trace=tempWaves(ss,:,:); % Select one spike waveform at a time
             trace = permute(trace, [3 2 1]); % permute to row=electrode sites, column=timepoint, page=spikes
@@ -200,7 +200,7 @@ if spike_screen_bit == 1
             
             s_tempSpikes=cat(1,s_tempSpikes, ~isempty(match_extract)); % Create a logical array of whether the template is a good match or not
         end
-        s.([ 'unit2_', validClusterNumbers{ii} ]) = boolean(s_tempSpikes); 
+        s.units2{validClusterNumbers{ii}} = boolean(s_tempSpikes); 
             % Only units that match the template are stored as true
         fprintf(['Finished Unit: ', validClusterNumbers{ii}, '\n']);
     end            

@@ -104,7 +104,7 @@ for tt=1:n_trial-1 % go through each trial
     trial_clusters = spike_clusters(spike_times>split_point(tt) & spike_times <= split_point(tt+1));
         % corresponding cluster assignments within that trial      
     for cc=1:length(clusters) % go through each cluster
-        s.(['unit_',num2str(clusters(cc),'%02i')]) =  trial_spikes(trial_clusters == clusters(cc));
+        s.units{cc} =  trial_spikes(trial_clusters == clusters(cc));
     end
 
     % Create 2 digit IDss
