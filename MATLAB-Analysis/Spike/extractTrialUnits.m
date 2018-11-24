@@ -57,12 +57,13 @@ if strcmpi(sortedType,'kilosort') % case insensitive srtcmp
                 end
             end
         end
-        s.cluster_groups = cluster_groups; % preserving the original allocations by storing this struct
-        s.clusters = clusters;      % storage of what clusters were kepts
-    else % if no cluster types specified, just take them all
+        s.clusters = num2str(clusters,'%02i');      % storage of what clusters were kepts
+        s.cluster_groups = cluster_groups.group; % preserving the original allocations by storing this struct
+            else % if no cluster types specified, just take them all
         clusters=sort(unique(spike_clusters));
         if ~isempty(cluster_groups)
-            s.cluster_groups = cluster_groups;
+            s.clusters = num2str(cluster_groups.cluster_id,'%02i'); % storage of what clusters were kepts
+            s.cluster_groups = cluster_groups.group; % preserving the original allocations by storing this struct
         end
     end
 
