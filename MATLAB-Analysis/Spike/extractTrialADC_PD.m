@@ -43,7 +43,7 @@ m.pd_f = fir1(m.pd_flen,m.pd_cut/(m.sRateHz/2),'low'); % photodiode
 try         % check if m.pdthr is set
     m.pdthr;
 catch       % if not set, use get_ch_thr - to set the channel threshold
-    m.pdthr = get_ch_thr(rawBinary,m.nChans,m.pdch,5e5,'pd',m.pd_f,3e3,0,0);
+    m.pdthr = get_ch_thr(rawBinary,m.nChans,m.pdch,5e5,'pd',m.pd_f,3,0,0);
 end
  
 x = [];        
