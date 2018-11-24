@@ -105,7 +105,7 @@ for tt=1:n_trial-1 % go through each trial
         % corresponding cluster assignments within that trial      
     for cc=1:length(clusters) % go through each cluster
         s.(['unit_',num2str(clusters(cc),'%02i')]) =  trial_spikes(trial_clusters == clusters(cc));
-        s.units{clusters(cc)} = trial_spikes(trial_clusters == clusters(cc));
+        %s.units{str2num(clusters(cc))+1} = trial_spikes(trial_clusters == clusters(cc));
     end
 
     % Create 2 digit IDss

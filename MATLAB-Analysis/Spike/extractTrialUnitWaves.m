@@ -183,7 +183,7 @@ for ii=1:length(validFieldNames)
     unitWaves = ismember(spike_times, s.([ 'unit_', validClusterNumbers{ii} ]) );
 
     s.([ 'waves_', num2str(validClusterNumbers{ii},'%02i') ]) = waves(unitWaves,:,:); % For spikes   X spike elements X channels
-    s.waves{validClusterNumbers{ii}} = waves(unitWaves,:,:);
+    %s.waves{str2num(validClusterNumbers{ii})+1} = waves(unitWaves,:,:);
 end
 
 %% Perform Secondary Spike Sorting
@@ -202,7 +202,7 @@ if spike_screen_bit == 1
             s_tempSpikes=cat(1,s_tempSpikes, ~isempty(match_extract)); % Create a logical array of whether the template is a good match or not
         end
         s.([ 'unit2_', validClusterNumbers{ii} ]) = boolean(s_tempSpikes); 
-        s.unit2{validClusterNumbers{ii}} = boolean(s_tempSpikes); 
+        %s.units2{str2num(validClusterNumbers{ii}+1)} = boolean(s_tempSpikes); 
             % Only units that match the template are stored as true
         fprintf(['Finished Unit: ', validClusterNumbers{ii}, '\n']);
     end            

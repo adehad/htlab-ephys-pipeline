@@ -24,14 +24,16 @@ if ~strcmp(reqFuncStr,'')
 end
 
 %% Step 3: Compile spike raster
+meanStimLength = round(mean(m.stimLength));
+
 if strcmpi(selectUnits, 'all')
     selectUnits = length(s.units);
 end
 for ii = selectUnits
     spikeTrain = [];
     for jj=1:nLoops
-        nextTrialShift = s.units{ii} - m.pd(m.repeatIndex + 1);
-        nextSpikeTrain = nextTrialShift(find(nextTrialShift>0 & nextTrialShift<m.stimLength));
+        nextTrialShift = s.units{ii} - m.pd(m.repeatIndex(jj) + 1);
+        nextSpikeTrain = nextTrialShift(find(nextTrialShift>0 & nextTrialShift<m.stimLength(jj)));
         spikeTrain=[spikeTrain nextSpikeTrain];
     end
     
@@ -40,7 +42,7 @@ for ii = selectUnits
     subplot(10,1,1:2); % Position
     plot(m.angleStimXYPos(:,1),'r');
     plot(m.angleStimXYPos(:,2),'b');
-    xlim([0 m.stimLength])
+    xlim([0 meanStimLength])
     ylim([-max(m.xPix, m.yPix)/2, max(m.xPix, m.yPix)/2])
 
 %     subplot(10,1,3:4);  % Velocity
@@ -49,12 +51,12 @@ for ii = selectUnits
 %     ylim([-150 150])
 
     subplot(10,1,5:9);  % Spike Raster
-    rasterplot(spikeTrain,nLoops,m.stimLength,gca);
+    rasterplot(spikeTrain,nLoops,meanStimLength,gca);
     
     subplot(10,1,10);   % Spike Histogram
-    [nelements,centers]=hist(spikeTrain,0:36:m.stimLength);
-    spikeHis=csaps(centers,nelements,0.5,1:m.stimLength); % smooth and upsample
-    plot((1:m.stimLength)./m.fps,spikeHis)
-    xlim([0 m.stimLength./m.fps])
+    [nelements,centers]=hist(spikeTrain,0:36:meanStimLength);
+    spikeHis=csaps(centers,nelements,0.5,1:meanStimLength); % smooth and upsample
+    plot(1:meanStimLength/m.fps, spikeHis)
+    xlim([0 meanStimLength/m.fps])
     ylim([0 50])
 end

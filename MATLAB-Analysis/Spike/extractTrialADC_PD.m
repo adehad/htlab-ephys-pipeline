@@ -25,7 +25,6 @@ else
     error(['Could not open binary file: ', rawBinary])
 end
 
-% m.fps       = 360; %projector frame rate (RGB)
 m.pdwin     = pdwin*m.msec; % window to crop around pd events
 esize_msec  = esize*m.msec; % in units of sample pts
 esize_bytes = esize_msec*m.nChans*m.dbytes; % in units of bytes

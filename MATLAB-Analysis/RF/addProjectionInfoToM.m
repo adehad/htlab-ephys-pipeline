@@ -16,27 +16,32 @@ m.stimXYPos = stimData.data(:,5:6);
 
 m.StimGL_nloops = nLoops; % Number of loops in stimGL
 dt=1/m.fps;    % fps is of projector
-m.stimLength=size(m.stimXYPos,1); % stimulus length (excluding repeats)
 pdDiff = double(diff(m.pd));
 pdDiffThreshold = 1.6e3; % during each repeat of the stimulus there is a repeated PD event, this threshold finds it
 [~, m.repeatIndex]=find(pdDiff>pdDiffThreshold);
+m.repeatIndex = [1, m.repeatIndex];
+if length(m.repeatIndex) > nLoops
+    m.repeatIndex(end) = [];
+end
+m.stimLength = diff([m.repeatIndex, m.pd(end)]); % stimulus length of each repeat
+stimLengthSubFrames = size(m.stimXYPos,1); % ideal stimulus as in stimGL file
 
-%% Step 1: Reconstruct target angular data
+%% Reconstruct target angular data
 m.angleStimXYPos(:,1) = rad2deg(-atan((m.stimXYPos(:,1) - m.xPix/2)/(m.D*m.xMap))); % get angular positioning of stimulus
 m.angleStimXYPos(:,2) = rad2deg(-atan((m.stimXYPos(:,2) - m.yPix/2 - m.C*m.yMap)/(m.D*m.yMap))); % get angular positioning of stimulus
 
 m.angleStimVel=diff(m.angleStimXYPos,1)/dt; % get velocity at each t
-m.angleStimVel(:,1)=csaps(1:m.stimLength-1,m.angleStimVel(:,1),0.5,1.5:m.stimLength-0.5); % smooth out velocity vectors over t
-m.angleStimVel(:,2)=csaps(1:m.stimLength-1,m.angleStimVel(:,2),0.5,1.5:m.stimLength-0.5); % smooth out velocity vectors over t
-m.angleStimVel=[m.angleStimVel(1,:); m.angleStimVel]; % fill in velocity at t = 0
+m.angleStimVel(:,1)=csaps(1:stimLengthSubFrames-1,m.angleStimVel(:,1),0.5,1.5:stimLengthSubFrames-0.5); % smooth out velocity vectors over t
+m.angleStimVel(:,2)=csaps(1:stimLengthSubFrames-1,m.angleStimVel(:,2),0.5,1.5:stimLengthSubFrames-0.5); % smooth out velocity vectors over t
+m.angleStimVel=[m.angleStimVel(1,:); m.angleStimVel]; % fill in velocity at t = 0 since diff() discards first element
 
-%% Step 2: Align all the data series
-%nLoops = m.StimGL_nloops;
-% for ii=1:nLoops
-%     m.repeatTime(ii)=round(double(m.pd(m.repeatIndex(ii)+1))*m.fps/m.sRateHz);
-%     m.pixLoopedXYPos = [m.pixLoopedXYPos; zeros((m.repeatTime(ii)-size(m.pixLoopedXYPos,1)),2), m.stimXYPos];
-%     m.angleLoopedXYPos = [m.angleLoopedXYPos; zeros((m.repeatTime(ii)*-size(m.angleLoopedXYPos,1)),2), m.angleStimXYPos];
-%     m.angleLoopedVel = [m.angleLoopedVel; zeros((m.repeatTime(ii)-size(m.angleLoopedVel,1)),2), m.angleStimXYVel];
-% end
+for ii=1:nLoops
+    repeatTime(ii)=round(double(m.pd(m.repeatIndex(ii)+1))*m.fps/m.sRateHz);
+    %pixLoopedXYPos = [pixLoopedXYPos; nan((repeatTime(ii)-size(pixLoopedXYPos,1)),2), m.stimXYPos];
+    %angleLoopedXYPos = [angleLoopedXYPos; nan((m.repeatTime(ii)*-size(angleLoopedXYPos,1)),2), m.angleStimXYPos];
+    %angleLoopedVel = [angleLoopedVel; nan((m.repeatTime(ii)-size(angleLoopedVel,1)),2), m.angleStimVel];
+    %m.matchedAngleStimXYPos = 
+    %m.matchedAngleStimVel = 
+end
 
 end
