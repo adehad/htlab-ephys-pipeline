@@ -17,22 +17,26 @@ m.stimXYPos = stimData.data(:,5:6);
 m.StimGL_nloops = nLoops; % Number of loops in stimGL
 dt=1/m.fps;    % fps is of projector
 pdDiff = double(diff(m.pd));
-pdDiffThreshold = 1.6e3; % during each repeat of the stimulus there is a repeated PD event, this threshold finds it
+pdDiffThreshold = 1.5e3; % during each repeat of the stimulus there is a repeated PD event, this threshold finds it
 [~, m.repeatIndex]=find(pdDiff>pdDiffThreshold);
-m.repeatIndex = [1, m.repeatIndex];
+m.repeatIndex = [0, m.repeatIndex];
 if length(m.repeatIndex) > nLoops
-    m.repeatIndex(end) = [];
+    m.stimLength = diff(m.pd(m.repeatIndex + 1)); % stimulus length of each repeat
+else
+    m.stimLength = diff([m.pd(m.repeatIndex + 1), m.pd(end)]); % stimulus length of each repeat
 end
-m.stimLength = diff([m.repeatIndex, m.pd(end)]); % stimulus length of each repeat
+m.repeatIndex = m.repeatIndex(1:nLoops);
+m.stimLength = m.stimLength(1:nLoops);
 stimLengthSubFrames = size(m.stimXYPos,1); % ideal stimulus as in stimGL file
 
 %% Reconstruct target angular data
 m.angleStimXYPos(:,1) = rad2deg(-atan((m.stimXYPos(:,1) - m.xPix/2)/(m.D*m.xMap))); % get angular positioning of stimulus
 m.angleStimXYPos(:,2) = rad2deg(-atan((m.stimXYPos(:,2) - m.yPix/2 - m.C*m.yMap)/(m.D*m.yMap))); % get angular positioning of stimulus
+m.outOfBoundsIdx = ismember(m.stimXYPos,[m.xPix m.yPix],'rows');
 
 m.angleStimVel=diff(m.angleStimXYPos,1)/dt; % get velocity at each t
-m.angleStimVel(:,1)=csaps(1:stimLengthSubFrames-1,m.angleStimVel(:,1),0.5,1.5:stimLengthSubFrames-0.5); % smooth out velocity vectors over t
-m.angleStimVel(:,2)=csaps(1:stimLengthSubFrames-1,m.angleStimVel(:,2),0.5,1.5:stimLengthSubFrames-0.5); % smooth out velocity vectors over t
+%m.angleStimVel(:,1)=csaps(1:stimLengthSubFrames-1,m.angleStimVel(:,1),0.5,1.5:stimLengthSubFrames-0.5); % smooth out velocity vectors over t
+%m.angleStimVel(:,2)=csaps(1:stimLengthSubFrames-1,m.angleStimVel(:,2),0.5,1.5:stimLengthSubFrames-0.5); % smooth out velocity vectors over t
 m.angleStimVel=[m.angleStimVel(1,:); m.angleStimVel]; % fill in velocity at t = 0 since diff() discards first element
 
 for ii=1:nLoops
