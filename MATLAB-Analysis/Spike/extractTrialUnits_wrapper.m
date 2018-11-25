@@ -17,8 +17,8 @@ filename.sortOutput= extractTrialUnits(sortedType,...           % sorting Progra
 
 filename.sortOutput = [sortOutputFolder, filename.sortOutput];   
 %% Establish Metafile struct
-filename.raw=['C:\Users\Daniel\Box Sync\MEGA_BINARY\181017_06.bin'];
-filename.sortOutput=['C:\Users\Daniel\Box Sync\MEGA_BINARY\KiloSort\181017_06_sorted.mat'];
+filename.raw=['C:\Users\Daniel\Box Sync\MEGA_BINARY\181017_09.bin'];
+filename.sortOutput=['C:\Users\Daniel\Box Sync\MEGA_BINARY\KiloSort\181017_09_sorted.mat'];
 
 %%% IF YOU HAVE A .meta FILE (telemetry)
     %[m, fpath, mfile] = readMetafile2('150526__MovingObjects_1.meta','C:\PATH\TO\THE\METAFILE\150526\Tetrode test data\');
@@ -44,7 +44,7 @@ m.msec      = m.sRateHz/1000; % conversion factor from ms time to sample number
                       []);              % filename to store output, leave as [] if you don't want to save
                                                            
 %% Extract PD data
-m.fps = 180; % (projector frame rate)*3  (*3 for RGB)
+m.fps = 180; % (projector frame rate)*3  (*3 if B&W)
 % m.pdthr = 3e3; % Can set now, or comment out to set graphically in function (telemetry)
 m.pdthr = 3; % OpenEphys projection PD 
 [m] = extractTrialADC_PD(filename.raw, ... % Binary File

@@ -9,13 +9,17 @@ if ~strcmpi(drawingMode, 'cone') ||~strcmpi(drawingMode, 'blob') || ~strcmpi(dra
     drawingMode = 'arrows';
 end
 
+if strcmpi(selectUnits, 'all')
+    selectUnits = s.cluster_groups.cluster_id;
+end
+
 nLoops = m.StimGL_nloops;
 Xedges = floor(min(m.angleStimXYPos(:,1))/sqSize)*sqSize:sqSize:ceil(max(m.angleStimXYPos(:,1))/sqSize)*sqSize;
 Yedges = floor(min(m.angleStimXYPos(:,2))/sqSize)*sqSize:sqSize:ceil(max(m.angleStimXYPos(:,2))/sqSize)*sqSize;
 
 for ii = selectUnits
     % heat map
-    singleUnit = m.units{ii};
+    singleUnit = double(s.(sprintf('unit_%02i',ii)));
     singleUnit = singleUnit(m.pd(m.repeatIndex(1)) < singleUnit & singleUnit < m.pd(end));
     lastFrameIdx = ones(length(singleUnit) + 1,1);
     for jj = length(singleUnit)

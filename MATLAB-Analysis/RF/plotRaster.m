@@ -29,10 +29,10 @@ maxStimLength = max(stimLength);
 nLoops = m.StimGL_nloops;
 
 if strcmpi(selectUnits, 'all')
-    selectUnits = length(s.units);
+    selectUnits = s.cluster_groups.cluster_id;
 end
 
-for ii = selectUnits
+for ii = selectUnits'
     spikeLocations = [];
     for jj=1:nLoops
         %nextTrialShift = s.units{ii} - m.pd(m.repeatIndex(jj) + 1);
@@ -43,6 +43,7 @@ for ii = selectUnits
     end
 
     figure
+    title(sprintf('unit_%02i',ii)) 
     set(gcf,'color','w');
     
     axCellList{1} = subplot(10,1,1:2);  % Velocity angle
@@ -50,8 +51,8 @@ for ii = selectUnits
     stimAngles(stimAngles == -180) = 180;
     stimAngles(ismember(m.angleStimVel, [0 0], 'rows')) = nan;
     stimAngles(m.outOfBoundsIdx) = nan;
-    plot((1:length(m.stimXYPos))/m.sRateHz*1000, stimAngles,'r');
-    xlim([0 length(m.stimXYPos)/m.sRateHz*1000])
+    plot(linspace(0,maxStimLength/m.sRateHz*1000,length(stimAngles-2)), stimAngles,'r');
+    xlim([0 maxStimLength/m.sRateHz*1000])
     set(gca,'xtick',[])
     ylabel('Stimulus trajectory angle (°)')
 
@@ -67,7 +68,6 @@ for ii = selectUnits
     ylabel('Frequency')
 
 end
-
 
 % UI Controls, we need a variable to store the axis handle for each subplot
 % we want the axis to change for, additionally each axis should have the

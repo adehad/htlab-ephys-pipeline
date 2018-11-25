@@ -72,10 +72,16 @@ for k = 1:lastblock  % go to the last block
        
     
     % get pd data
-    [pdk,pwavetmp] = get_events(x,m.pdch,m.pd_f,m.pdwin,m.msec,m.pdthr,0,0);
+    [pdk,pdrk,pdfk,pwavetmp] = get_events(x,m.pdch,m.pd_f,m.pdwin,m.msec,m.pdthr,0,0);
     truepd = find((pdk > esize_msec) & (pdk < size(x,2) - esize_msec));
     pwaves = [pwaves; pwavetmp(truepd,:)];
     pd = [pd (pdk(truepd)+(k-1)*(trueblock))];
+    
+    truepdr = find((pdrk > esize_msec) & (pdrk < size(x,2) - esize_msec));
+    pdr = [pdr (pdrk(truepdr)+(k-1)*(trueblock))];
+    truepdf = find((pdfk > esize_msec) & (pdfk < size(x,2) - esize_msec));
+    pdf = [pdf (pdfk(truepdf)+(k-1)*(trueblock))];
+    
 
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %     % get PD data different approach (?)
@@ -136,6 +142,8 @@ disp('-----------------------------------------------------------')
 %% Save PD data to mat file
 
 m.pd = pd;
+m.pdr = pdr;
+m.pdf = pdf;
 
 %% Save to .mat File
 
@@ -150,7 +158,7 @@ end
 
 
 % Appended Functions
-function [events,waves,xi] = get_events(x,ch,f,win,msec,thr,bgoff,recenter)
+function [events, eRising, eFalling, waves,xi] = get_events(x,ch,f,win,msec,thr,bgoff,recenter)
 %
 % given a time series, find events > than a threshold
 %
@@ -185,7 +193,9 @@ end;
 
 if thr > 0
 % events = find(diff(xi > thr) == 1) + 1;
-events = find(diff(xi > thr) > 0) + 1; %a spike event is when the signal crosses the thr value
+events = find(abs(diff(xi > thr)) > 0) + 1; %a spike event is when the signal crosses the thr value
+eRising = find(diff(xi > thr) > 0) + 1;
+eFalling = events(~ismember(events, eRising));
 else
 events = find(diff(xi > thr) < 0) + 1; %a spike event is when the signal crosses the thr value    
 end
