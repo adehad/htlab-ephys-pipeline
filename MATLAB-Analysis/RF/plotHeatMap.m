@@ -1,8 +1,4 @@
 function [] = plotHeatMap(m, s, selectUnits, tsdnLatency, sqSize, drawingMode)
-%% Plot Receptive Fields
-%%%% INPUT: TarTraj (above), Gaze_rest, head_offset, spikes_180 (spike times in 180Hz projector indices)
-%%%% Requires: plotellipse.m
-
 %% set up some variables
 
 if ~strcmpi(drawingMode, 'cone') ||~strcmpi(drawingMode, 'blob') || ~strcmpi(drawingMode, 'arrows')
@@ -13,23 +9,22 @@ if strcmpi(selectUnits, 'all')
     selectUnits = s.cluster_groups.cluster_id;
 end
 
-nLoops = m.StimGL_nloops;
 Xedges = floor(min(m.angleStimXYPos(:,1))/sqSize)*sqSize:sqSize:ceil(max(m.angleStimXYPos(:,1))/sqSize)*sqSize;
 Yedges = floor(min(m.angleStimXYPos(:,2))/sqSize)*sqSize:sqSize:ceil(max(m.angleStimXYPos(:,2))/sqSize)*sqSize;
 
 for ii = selectUnits
     % heat map
     singleUnit = double(s.(sprintf('unit_%02i',ii)));
-    singleUnit = singleUnit(m.pd(m.repeatIndex(1)) < singleUnit & singleUnit < m.pd(end));
+    singleUnit = singleUnit(m.pd(1) <= singleUnit & singleUnit <= m.pd(m.repeatIndex(end)));
     lastFrameIdx = ones(length(singleUnit) + 1,1);
-    for jj = length(singleUnit)
-        shiftedPD = m.pd(lastFrameIdx(jj):end) - singleUnit(jj);
-        [~, lastFrameIdx(jj+1)] = max(shiftedPD(shiftedPD < 0));
+    for kk = 1:length(singleUnit)
+        shiftedPD = m.pd(lastFrameIdx(kk):end) - singleUnit(kk);
+        shiftedPD = shiftedPD(shiftedPD <= 0);
+        lastFrameIdx(kk+1) = length(shiftedPD);
     end
     lastFrameIdx(1) = [];
     spikeXYPos = matchedAngleStimXYPos(lastFrameIdx,:);
     spikeVel = matchedAngleStimVel(lastFrameIdx,:);
-    
     figure
     histogram2(spikeXYPos(:,1),spikeXYPos(:,2),Xedges,Yedges, ...
         'DisplayStyle','tile','ShowEmptyBins','on');

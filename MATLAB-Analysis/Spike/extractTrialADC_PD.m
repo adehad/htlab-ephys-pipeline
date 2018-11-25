@@ -48,6 +48,8 @@ end
  
 x = [];        
 pd = [];
+pdRise = [];
+pdFall = [];
 pwaves = [];
 
 % slong_srate = 1000; %Hz
@@ -78,9 +80,9 @@ for k = 1:lastblock  % go to the last block
     pd = [pd (pdk(truepd)+(k-1)*(trueblock))];
     
     truepdr = find((pdrk > esize_msec) & (pdrk < size(x,2) - esize_msec));
-    pdr = [pdr (pdrk(truepdr)+(k-1)*(trueblock))];
+    pdRise = [pdRise (pdrk(truepdr)+(k-1)*(trueblock))];
     truepdf = find((pdfk > esize_msec) & (pdfk < size(x,2) - esize_msec));
-    pdf = [pdf (pdfk(truepdf)+(k-1)*(trueblock))];
+    pdFall = [pdFall (pdfk(truepdf)+(k-1)*(trueblock))];
     
 
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -142,8 +144,8 @@ disp('-----------------------------------------------------------')
 %% Save PD data to mat file
 
 m.pd = pd;
-m.pdr = pdr;
-m.pdf = pdf;
+m.pdRise = pdRise;
+m.pdFall = pdFall;
 
 %% Save to .mat File
 

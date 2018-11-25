@@ -37,7 +37,7 @@ for ii = selectUnits'
     for jj=1:nLoops
         %nextTrialShift = s.units{ii} - m.pd(m.repeatIndex(jj) + 1);
         nextTrialShift = double(s.(sprintf('unit_%02i',ii))) - m.pd(m.repeatIndex(jj) + 1);
-        nextSpikeTrain = nextTrialShift(nextTrialShift>0 & nextTrialShift<stimLength(jj));
+        nextSpikeTrain = nextTrialShift(nextTrialShift>=0 & nextTrialShift<=stimLength(jj));
         spikeTrain{jj} = nextSpikeTrain;
         spikeLocations = [spikeLocations; nextSpikeTrain];
     end

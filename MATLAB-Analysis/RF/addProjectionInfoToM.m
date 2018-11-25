@@ -21,18 +21,20 @@ m.StimGL_nloops = nLoops; % SET: Number of loops in stimGL
 pdDiff = double(diff(m.pd));
 pdDiffThreshold = 1.5e3; % SET: during each repeat of the stimulus there is a repeated PD event, this threshold finds it
 [~, m.repeatIndex]=find(pdDiff>pdDiffThreshold);
+
+if length(m.repeatIndex) < nLoops
+    m.repeatIndex(end+1) = m.pd(end);
+end
 m.repeatIndex = [0, m.repeatIndex];
-if length(m.repeatIndex) > nLoops
-    m.stimLength = diff(m.pd(m.repeatIndex + 1)); % stimulus length of each repeat
-else
-    m.stimLength = diff([m.pd(m.repeatIndex + 1), m.pd(end)]); % stimulus length of each repeat
+for ii = 1:length(m.repeatIndex)-1
+    m.stimLength(ii) = m.pd(m.repeatIndex(ii+1)) - m.pd(m.repeatIndex(ii)+1);
+    m.trialFrameCounts(ii) = length(find(m.pd >= m.pd(m.repeatIndex(ii)+1) & m.pd <= m.pd(m.repeatIndex(ii+1))));
 end
 m.repeatIndex = m.repeatIndex(1:nLoops);
 m.stimLength = m.stimLength(1:nLoops);
+m.trialFrameCounts = m.trialFrameCounts(1:nLoops);
 
 %% Find number of frames actually shown and find dropped frames
-actualStimLengths = m.pd(m.repeatIndex - 1) - m.pd(m.repeatIndex);
-
 
 %% Reconstruct target angular data
 m.angleStimXYPos(:,1) = rad2deg(-atan((m.stimXYPos(:,1) - m.xPix/2)/(m.D*m.xMap))); % get angular positioning of stimulus
