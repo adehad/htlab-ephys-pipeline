@@ -1,7 +1,6 @@
-m.pdRise(2,:) = 1;
-m.pdFall(2,:) = 2;
-interlaced = zeros(2,max([length(m.pdRise) length(m.pdFall)])*2);
-interlaced(:,1:2:end-2) = m.pdRise;
-interlaced(:,2:2:end) = m.pdFall;
-temp = diff(interlaced(2,:));
-discontLoc = find(temp == 0)
+a = ones(size(m.pdRise));
+b = 2*ones(size(m.pdFall));
+c = [a b];
+[~, temp] = sort([m.pdRise m.pdFall]);
+c = c(temp);
+discontLoc = find(c == 0);
