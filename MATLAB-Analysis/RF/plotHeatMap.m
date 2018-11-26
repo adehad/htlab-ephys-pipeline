@@ -6,7 +6,7 @@ if ~strcmpi(drawingMode, 'cone') ||~strcmpi(drawingMode, 'blob') || ~strcmpi(dra
 end
 
 if strcmpi(selectUnits, 'all')
-    selectUnits = s.cluster_groups.cluster_id;
+    selectUnits = s.clusters';
 end
 
 Xedges = floor(min(m.angleStimXYPos(:,1))/sqSize)*sqSize:sqSize:ceil(max(m.angleStimXYPos(:,1))/sqSize)*sqSize;

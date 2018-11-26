@@ -19,7 +19,7 @@ m.StimGL_nloops = nLoops; % SET: Number of loops in stimGL
 
 %% Get phododiode trial start indices and photodiode trial lengths
 pdDiff = double(diff(m.pd));
-pdDiffThreshold = 1.5e3; % SET: during each repeat of the stimulus there is a repeated PD event, this threshold finds it
+pdDiffThreshold = 1.6e3; % SET: during each repeat of the stimulus there is a repeated PD event, this threshold finds it
 [~, m.repeatIndex]=find(pdDiff>pdDiffThreshold);
 
 if length(m.repeatIndex) < nLoops

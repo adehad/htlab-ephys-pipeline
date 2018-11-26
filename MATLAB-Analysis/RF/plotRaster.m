@@ -29,7 +29,7 @@ maxStimLength = max(stimLength);
 nLoops = m.StimGL_nloops;
 
 if strcmpi(selectUnits, 'all')
-    selectUnits = s.cluster_groups.cluster_id;
+    selectUnits = s.clusters';
 end
 
 for ii = selectUnits'
@@ -67,11 +67,13 @@ for ii = selectUnits'
     xlabel('Time (ms)')
     ylabel('Frequency')
 
+    adjustLims(axCellList)
 end
 
 % UI Controls, we need a variable to store the axis handle for each subplot
 % we want the axis to change for, additionally each axis should have the
 % same x axis scale
+function adjustLims(axCellList)
 lowerLim = uicontrol(...
     'style',            'edit',...
     'units',            'pixels',...
