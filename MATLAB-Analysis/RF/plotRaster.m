@@ -29,10 +29,10 @@ maxStimLength = max(stimLength);
 nLoops = m.StimGL_nloops;
 
 if strcmpi(selectUnits, 'all')
-    selectUnits = s.clusters';
+    selectUnits = s.clusters;
 end
 
-for ii = selectUnits'
+for ii = selectUnits
     spikeLocations = [];
     for jj=1:nLoops
         %nextTrialShift = s.units{ii} - m.pd(m.repeatIndex(jj) + 1);

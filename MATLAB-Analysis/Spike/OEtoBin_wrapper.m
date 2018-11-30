@@ -1,12 +1,12 @@
 %% Converting Open-Ephs Data (organised in folders) to Binary Files needed for Spike Sorting
 
 % Folder separator: Windows = '\' Linux = '/'
-    pathToDataFolder    = 'E:\Box Sync\DragonVision_DanielKo\Data\Ephys\testEnv';   % If script already can reach dataFolder, set to ''
+    pathToDataFolder    = '\\bg-thefarm-2012\Shares\Lin_group_data\DATA\Ephys\testStimulus\';   % If script already can reach dataFolder, set to ''
     dataFolderNames     = 'all';% String array (DOUBLE QUOTES) such as ["181108",...] OR 'all' 
     overwriteFiles      = 1;    % 1 = overwrite, 0 = do not overwrite
     
 % Data Channel(s) - 100_CH<>.continuous files
-    dataCh              = 3:5;  % Array
+    dataCh              = [];  % Array
 % PhotoDiode Channel - 100_ADC<>.continuous files
     adcCh               = 1;    % Array
     
