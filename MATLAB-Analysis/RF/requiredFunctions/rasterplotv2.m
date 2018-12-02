@@ -84,8 +84,7 @@ end
 if (showlabels)
     % xlabel('Time(ms)');
     %     ylabel('Trials');
-    ylabel(['Trials (',num2str(numtrials),')'])
-    %set(hresp,'FontSize', 12);
+    ylabel(['Number of trials (',num2str(numtrials),')'])
 end
 
 

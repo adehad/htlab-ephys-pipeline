@@ -58,9 +58,10 @@ m.stimLength = m.stimLength(1:nLoops);
 stimLengthSubFrames = size(m.stimXYPos,1);
 
 %% raster plot
-nLoops = 40;
+figure
+nLoops = 20;
 stimLength = size(m.stimXYPos,1);
-    spikes_fps=round(s.unit_00*180/30000);  
+spikes_fps=round(s.unit_00*180/30000);  
 %end
 RasterMask=zeros(1,stimLength);
 ind=find(spikes_fps>0 & spikes_fps<stimLength);
