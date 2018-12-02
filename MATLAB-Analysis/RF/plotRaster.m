@@ -6,35 +6,29 @@ function [] = plotRaster(m, s, selectUnits)
 %%%% filename.raw=['181017_01.bin']; % Raw data file
 %%%% filename.kilosortOutput=['181017_01_sorted.mat']; %including structure s and trial_spikes, trial_cluster
 
-%% Check Required Functions
+%% Check Required Functions and set up variables
 addpath(genpath('requiredFunctions')) % path to folder with functions
 reqFuncStr = '';
-if ~exist('readMetafile.m','file'); reqFuncStr=strcat(reqFuncStr,'readMetafile.m, ');           end
-if ~exist('get_ch_thr.m','file');   reqFuncStr=strcat(reqFuncStr,'get_ch_thr.m, ');             end
-if ~exist('get_events.m','file');   reqFuncStr=strcat(reqFuncStr,'get_events.m (get_ch_thr), ');end
-if ~exist('splitconv.m','file');    reqFuncStr=strcat(reqFuncStr,'splitconv.m (get_events), '); end
-if ~exist('tconv.m','file');        reqFuncStr=strcat(reqFuncStr,'tconv.m (splitconv), ');      end
-if ~exist('wavecull.m','file');     reqFuncStr=strcat(reqFuncStr,'wavecull.m, ');               end
-if ~exist('rasterplot.m','file');   reqFuncStr=strcat(reqFuncStr,'rasterplot.m, ');             end
-if ~exist('plot_dir_ade.m','file');  reqFuncStr=strcat(reqFuncStr,'plot_dir_ade.m (can replace with plot), ');            end
-if ~exist('plotellipse.m','file');  reqFuncStr=strcat(reqFuncStr,'plotellipse.m, ');            end
+if ~exist('rasterplotv2.m','file');   reqFuncStr=strcat(reqFuncStr,'rasterplotv2.m, ');             end
 
 if ~strcmp(reqFuncStr,'')
     error(['The following functions could not be found in the search path:', newline, reqFuncStr])
 end
 
-%% Step 3: Compile spike raster
-stimLength = m.stimLength;
-maxStimLength = max(stimLength);
-nLoops = m.StimGL_nloops;
-
 if strcmpi(selectUnits, 'all')
     selectUnits = s.clusters;
 end
 
+stimLength = m.stimLength;
+maxStimLength = max(stimLength);
+nLoops = m.StimGL_nloops;
+%% spike raster
 for ii = selectUnits
     if ~isempty(s.(sprintf('unit_%02i',ii)))
         spikeLocations = [];
+        
+        % get indices of spikes relative to repeatIndex starts and store in
+        % a cell array for spike raster and a vector for spike histogram
         for jj=1:nLoops
             %nextTrialShift = s.units{ii} - m.pd(m.repeatIndex(jj) + 1);
             nextTrialShift = double(s.(sprintf('unit_%02i',ii))) - m.pd(m.repeatIndex(jj) + 1);
@@ -44,25 +38,30 @@ for ii = selectUnits
         end
         
         figure
-        title(sprintf('unit_%02i',ii))
+        title(sprintf('unit\\_%02i',ii))
         set(gcf,'color','w');
         
-        axCellList{1} = subplot(10,1,1:2);  % Velocity angle
+        % plot trajectory angles throughout the experiment, removing points
+        % where the trajectory was out of bounds
+        axCellList{1} = subplot(10,1,1:2);
         stimAngles = round(atan2d(m.angleStimVel(:,2), m.angleStimVel(:,1)));
         stimAngles(stimAngles == -180) = 180;
         stimAngles(ismember(m.angleStimVel, [0 0], 'rows')) = nan;
-        stimAngles(m.outOfBoundsIdx) = nan;
+        stimAngles(isnan(m.outOfBoundsIdx)) = nan;
         plot(linspace(0,maxStimLength/m.sRateHz,length(stimAngles-2)), stimAngles,'r');
         xlim([0 maxStimLength/m.sRateHz])
         set(gca,'xtick',[]); set(gca,'ytick',[-180 -90 0 90 180]); grid on
         ylabel('Stimulus trajectory angle (°)'); ylim([-200 200])
         
-        axCellList{2} = subplot(10,1,3:8);  % Spike Raster
+        % plot spike raster
+        axCellList{2} = subplot(10,1,3:8);
         rasterplotv2(spikeTrain,maxStimLength,gca,m.sRateHz);
         
-        axCellList{3} = subplot(10,1,9:10);   % Spike Histogram
+        % plot smoothed and upsampled spike histogram - TO DO: MAKE IT NOT
+        % GO NEGATIVE
+        axCellList{3} = subplot(10,1,9:10);
         [nelements,centers]=hist(spikeLocations,0:maxStimLength/80:maxStimLength);
-        spikeHis=csaps(centers,nelements,0.5,1:maxStimLength); % smooth and upsample
+        spikeHis=csaps(centers,nelements,0.5,1:maxStimLength);
         plot((1:maxStimLength)/m.sRateHz, spikeHis/nLoops)
         xlim([0 maxStimLength/m.sRateHz])
         xlabel('Time (s)')
@@ -76,6 +75,7 @@ for ii = selectUnits
     end
 end
 
+%% UI control
 % UI Controls, we need a variable to store the axis handle for each subplot
 % we want the axis to change for, additionally each axis should have the
 % same x axis scale
