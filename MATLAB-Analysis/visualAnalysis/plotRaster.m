@@ -9,7 +9,7 @@ function [] = plotRaster(m, s, selectUnits)
 %% Check Required Functions and set up variables
 addpath(genpath('requiredFunctions')) % path to folder with functions
 reqFuncStr = '';
-if ~exist('rasterplotv2.m','file');   reqFuncStr=strcat(reqFuncStr,'rasterplotv2.m, ');             end
+if ~exist('rasterplotv2.m','file');   reqFuncStr=strcat(reqFuncStr,'rasterplotv2.m, '); end
 
 if ~strcmp(reqFuncStr,'')
     error(['The following functions could not be found in the search path:', newline, reqFuncStr])
@@ -55,17 +55,17 @@ for ii = selectUnits
         
         % plot spike raster
         axCellList{2} = subplot(10,1,3:8);
-        rasterplotv2(spikeTrain,maxStimLength,gca,m.sRateHz);
+        rasterplotv2(spikeTrain,maxStimLength,gca,m.sRateHz*1000);
         
         % plot smoothed and upsampled spike histogram - TO DO: MAKE IT NOT
         % GO NEGATIVE
         axCellList{3} = subplot(10,1,9:10);
-        [nelements,centers]=hist(spikeLocations,0:maxStimLength/80:maxStimLength);
-        spikeHis=csaps(centers,nelements,0.5,1:maxStimLength);
-        plot((1:maxStimLength)/m.sRateHz, spikeHis/nLoops)
+        [nelements,centers]=hist(spikeLocations,0:3000:maxStimLength);
+        %spikeHis=csaps(centers,nelements,0.5,1:maxStimLength);
+        plot(centers/m.sRateHz, 10*(nelements/nLoops))
         xlim([0 maxStimLength/m.sRateHz])
         xlabel('Time (s)')
-        ylabel('Mean spike frequency')
+        ylabel('Mean spike rate (Hz)')
         
         adjustLims(axCellList)
         saveas(gcf, ['raster_unit_' num2str(ii)], 'epsc');

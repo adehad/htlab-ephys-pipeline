@@ -1,4 +1,4 @@
-function [] = plotPolarPlot(m, s, selectUnits, discardCorner)
+function [] = plotPolar(m, s, selectUnits, discardCorner)
 
 if strcmpi(selectUnits, 'all')
     selectUnits = s.clusters;
@@ -17,34 +17,35 @@ for ii = selectUnits
         lastFrameIdx(1) = [];
         
         if discardCorner
+            priorVecAngles = atan2(m.oobMatchAngVel(:,2), m.oobMatchAngVel(:,1));
             spikeVel = m.oobMatchAngVel(lastFrameIdx,:);
         else
+            priorVecAngles = atan2(m.matchAngVel(:,2), m.matchAngVel(:,1));
             spikeVel = m.matchAngVel(lastFrameIdx,:);
         end
         
-        figure
-        set(gcf,'color','w');
+        spikeVecAngles = atan2(spikeVel(:,2),spikeVel(:,1));
+        f = figure('visible', 'off');
+        h1 = polarhistogram(priorVecAngles, 24);
+        dir1=h1.Values;
+        h2 = polarhistogram(spikeVecAngles, 24);
+        dir2=h2.Values;
+        close(f)
         
-        spikeVecAngles = atan2d(spikeVel(:,2),spikeVel(:,1));
-        leftRegion = find(spikeVecAngles < -172.5 | spikeVecAngles > 172.5);
-        angleEdges = -172.5:15:172.5;
-        angleMiddles = deg2rad([195:15:360, 15:15:195]);
-        
-        angleHist = histcounts(spikeVecAngles,angleEdges);
-        normHistVals = [angleHist length(leftRegion)];
-        normHistVals = 4*((normHistVals)/max(normHistVals) + 0.2);
-        normHistVals = [normHistVals normHistVals(1)];
-        polarplot(angleMiddles, normHistVals);
-        
-        %TODO: this mean is done on -180 180
+        % normalise response directions by the frequency of direction
+        % presentation. Find the mean normalised binned response vector
+        dir1=dir1/sum(dir1); %prior
+        dir2=dir2/sum(dir2); %response
+        dir3=dir2./dir1; %normalization
+        dir3=dir3*100/sum(dir3);
+        meanVecangle = mean(dir3,'omitnan');
+
+        polarplot(linspace(0, 2*pi, 25),[dir3 dir3(1)]);
         hold on
-        meanVecangle = mean(spikeVecAngles,'omitnan');
-        if meanVecangle < 0
-            meanVecangle = meanVecangle + 360;
-        end
-        polarplot(deg2rad([meanVecangle meanVecangle]), [0, max(normHistVals)]);
-        
+        set(gcf,'color','w');
+        polarplot([meanVecangle meanVecangle], [0, max(dir3)]);
         title(sprintf('unit\\_%02i',ii))
+        
         saveas(gcf, ['polar_unit_' num2str(ii) '_post'], 'epsc');
         saveas(gcf, ['polar_unit_' num2str(ii) '_post'], 'fig');
     else

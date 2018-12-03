@@ -1,9 +1,11 @@
-function [] = plotHeatMap(m, s, selectUnits, tsdnLatency, sqSize, drawingMode, discardCorner, units)
+function [] = plotHeatmap(m, s, selectUnits, tsdnLatency, sqSize, drawingMode, discardCorner, units)
 %% set up some variables
 
+%TODO: SCALE MEAN ARROWS
+
 % choose spike direction drawing type
-if ~strcmpi(drawingMode, 'cone') && ~strcmpi(drawingMode, 'blob') && ~strcmpi(drawingMode, 'arrows')
-    drawingMode = 'blob';
+if ~strcmpi(drawingMode, 'blob') && ~strcmpi(drawingMode, 'arrows')
+    drawingMode = 'none';
 end
 % choose whether heat map is on screen pixels or angular
 if ~strcmpi(units, 'pixels') && ~strcmpi(units, 'angle')
@@ -85,6 +87,7 @@ for ii = selectUnits
         for jj = 1:size(uniqueLowerEdges,1)
             sqIndex = ismember(lowerEdges,uniqueLowerEdges(jj,:),'rows');
             sqMiddle = uniqueLowerEdges(jj,:) + sqSize/2;
+            
             if strcmpi(drawingMode, 'arrows')
                 hold on
                 % draw small arrows from the centre of each bin for each

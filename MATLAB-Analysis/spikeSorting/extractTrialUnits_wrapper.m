@@ -1,13 +1,13 @@
 %% Wrapper File for Extracting Information from Binary files & Sorting Program Outputs
 %% Add Functions to Path
 addpath(genpath('C:\Users\Daniel\Documents\GitHub\htlab-ephys-pipeline\MATLAB-Analysis\Spike'))
-%% Extracts spike times to _sortedmat
+%% SECTION 1: Extracts spike times to _sortedmat
 sortedType = 'kilosort';
 sortOutputFolder = 'C:\PATH\TO\THE\SORTED\FOLDER\181108\preAutoMerge';
 file = '181108';
 startTrial = 1;
 csvName = [];
-clusterType = 'unsorted';
+clusterType = 'unsorted'; %good, unsorted, noise or empty (when there has been no manual sorting, theres only unsorted). Arrays accepted
 filename.sortOutput= extractTrialUnits(sortedType,...           % sorting Program used
                                        sortOutputFolder, ...    % location of sorting output
                                        file, ....               % ['YYMMDD' ; 'XYZ.kwik'] - XYZ.kwik is only if you are using klusta
@@ -16,7 +16,7 @@ filename.sortOutput= extractTrialUnits(sortedType,...           % sorting Progra
                                        clusterType);            % ['XYZ' ; 'ABC'] - rows containing different cluster types to keep - note: depends on your manual clustering - leave empty if you want to keep all of them
 
 filename.sortOutput = [sortOutputFolder, filename.sortOutput];   
-%% Establish Metafile struct
+%% SECTION 2: Establish Metafile struct
 filename.raw=['C:\Users\Daniel\Box Sync\DragonVision_DanielKo\Data\Ephys\181116\2018-11-16_16-23-50\2018-11-16_16-23-50_padded.bin'];
 filename.rawADC=['C:\Users\Daniel\Box Sync\DragonVision_DanielKo\Data\Ephys\181116\2018-11-16_16-23-50\2018-11-16_16-23-50_ADC.bin'];
 filename.sortOutput=['C:\Users\Daniel\Box Sync\DragonVision_DanielKo\Data\Ephys\181116\181116_05_sorted.mat'];
@@ -36,7 +36,7 @@ filename.sortOutput=['C:\Users\Daniel\Box Sync\DragonVision_DanielKo\Data\Ephys\
 m.dbytes    = 2; % byte size of data - i.e. int16 is 2 bytes
 m.msec      = m.sRateHz/1000; % conversion factor from ms time to sample number
 
-%% Extract Waveforms
+%% SECTION 3: Extract Waveforms
 m.nChans    = 4;            % number of channels
 m.ech       = 1:m.nChans-1; % ephys channel(s) is everything except the last
 
@@ -46,7 +46,7 @@ m.ech       = 1:m.nChans-1; % ephys channel(s) is everything except the last
                       0, ...                    % 1: if you want to do secondary template matching
                       []);              % filename to store output, leave as [] if you don't want to save
                                                            
-%% Extract PD data
+%% SECTION 4: Extract PD data
 m.nChans    = 1;        % number of channels
 m.pdch      = 1;        %assume pd is last ch
 m.fps       = 180;      % (projector frame rate)*3  (*3 if B&W)
