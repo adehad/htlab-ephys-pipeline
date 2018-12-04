@@ -18,8 +18,15 @@ filename.sortOutput= extractTrialUnits(sortedType,...           % sorting Progra
 filename.sortOutput = [sortOutputFolder, filename.sortOutput];   
 %% SECTION 2: Establish Metafile struct
 filename.raw=['C:\Users\Daniel\Box Sync\DragonVision_DanielKo\Data\Ephys\181116\2018-11-16_16-23-50\2018-11-16_16-23-50_padded.bin'];
-filename.rawADC=['C:\Users\Daniel\Box Sync\DragonVision_DanielKo\Data\Ephys\181116\2018-11-16_16-23-50\2018-11-16_16-23-50_ADC.bin'];
 filename.sortOutput=['C:\Users\Daniel\Box Sync\DragonVision_DanielKo\Data\Ephys\181116\181116_05_sorted.mat'];
+if isempty(filename.raw)
+    [fileName, filePath] = uigetfile('*.bin','Select experiment raw data .bin file:');
+    filename.raw = [filePath filesep fileName];
+end
+if isempty(filename.sortOutput)
+    [fileName,filePath] = uigetfile('*.mat','Select experiment _sorted.mat file:');
+    filename.sortOutput = [filePath filesep fileName];
+end
 
 %%% IF YOU HAVE A .meta FILE (telemetry)
     %[m, fpath, mfile] = readMetafile2('150526__MovingObjects_1.meta','C:\PATH\TO\THE\METAFILE\150526\Tetrode test data\');
@@ -46,16 +53,5 @@ m.ech       = 1:m.nChans-1; % ephys channel(s) is everything except the last
                       0, ...                    % 1: if you want to do secondary template matching
                       []);              % filename to store output, leave as [] if you don't want to save
                                                            
-%% SECTION 4: Extract PD data
-m.nChans    = 1;        % number of channels
-m.pdch      = 1;        %assume pd is last ch
-m.fps       = 180;      % (projector frame rate)*3  (*3 if B&W)
-% m.pdthr = 3e3; % Can set now, or comment out to set graphically in function (telemetry)
-m.pdthr     = 3;        % OpenEphys projection PD 
-
-m = extractTrialADC_PD(filename.rawADC, ... % Binary File
-                        m, ....     % metafile struct, m
-                        [] ); % filename to store output, leave as [] if you don't want to save
-
 %%
 save('181116_05.mat', 'm', 's', 'filename')
