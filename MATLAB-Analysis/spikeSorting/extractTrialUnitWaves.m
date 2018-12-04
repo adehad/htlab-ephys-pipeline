@@ -201,7 +201,7 @@ if spike_screen_bit == 1
             
             s_tempSpikes=cat(1,s_tempSpikes, ~isempty(match_extract)); % Create a logical array of whether the template is a good match or not
         end
-        s.([ 'unit2_', validClusterNumbers{ii} ]) = boolean(s_tempSpikes); 
+        s.([ 'cell_', validClusterNumbers{ii} ]) = boolean(s_tempSpikes); 
         %s.units2{str2num(validClusterNumbers{ii}+1)} = boolean(s_tempSpikes); 
             % Only units that match the template are stored as true
         fprintf(['Finished Unit: ', validClusterNumbers{ii}, '\n']);

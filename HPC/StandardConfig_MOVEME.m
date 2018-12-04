@@ -1,22 +1,23 @@
 ops.GPU                 = 1; % whether to run this code on an Nvidia GPU (much faster, mexGPUall first)		
 ops.parfor              = 1; % whether to use parfor to accelerate some parts of the algorithm		[Parallel Computing Toolbox Required]
 ops.verbose             = 1; % whether to print command line progress		
-ops.showfigures         = 1; % whether to plot figures during optimization		
+ops.showfigures         = 0; % whether to plot figures during optimization		
 		
 ops.datatype            = 'bin';  % binary ('dat', 'bin') or 'openEphys'		
-ops.fbinary             = '131210_merged46_converted.bin'; % will be created for 'openEphys'		
+ops.fbinary             = 'merge_0deg/150615_merged_converted.bin'; % will be created for 'openEphys'	
+								% folder separator is / in Linux, don't have spaces in folder or files names
 ops.fproc               = 'temp_wh.dat'; % residual from RAM of preprocessed data		
 ops.root                = pathToYourConfigFile; % 'openEphys' only: where raw files are	
-                            % must end with \
+                            % must end with / (Linux Folder separator)
 		
 % ops.fs                  = 0;        % sampling rate		(omit if already in chanMap file)
 % ops.NchanTOT            = 0;           % total number of channels (omit if already in chanMap file)
 % ops.Nchan               = 0;           % number of active channels (omit if already in chanMap file)
                 % Nchan must be factor of 32 
-ops.Nfilt               = 32;           % number of clusters to use (2-4 times more than Nchan, should be a multiple of 32)     		
+ops.Nfilt               = 12;           % number of clusters to use (2-4 times more than Nchan, should be a multiple of 32)     		
 ops.nNeighPC            = 2; % visualization only (Phy): number of channnels to mask the PCs, leave empty to skip (12)	
 %                 must be less than number of channels
-ops.nNeigh              = 16; % visualization only (Phy): number of neighboring templates to retain projections of (16)		
+ops.nNeigh              = 3; % visualization only (Phy): number of neighboring templates to retain projections of (16)		
 		
 % options for channel whitening		
 ops.whitening           = 'full'; % type of whitening (default 'full', for 'noSpikes' set options for spike detection below)		
@@ -38,6 +39,7 @@ ops.ntbuff              = 64;    % samples of symmetrical buffer for whitening a
 ops.scaleproc           = 200;   % int16 scaling of whitened data		
 ops.NT                  = 32*1024+ ops.ntbuff;% this is the batch size (try decreasing if out of memory) 		
 % for GPU should be multiple of 32 + ntbuff		
+ops.nt0 = 15; % set samples to take on either side of the detected peak (61)
 		
 % the following options can improve/deteriorate results. 		
 % when multiple values are provided for an option, the first two are beginning and ending anneal values, 		
@@ -51,8 +53,8 @@ ops.mergeT           = .1;           % upper threshold for merging (.1)
 ops.splitT           = .1;           % lower threshold for splitting (.1)		
 		
 % options for initializing spikes from data		
-ops.initialize      = 'no'; %'fromData' or 'no'		
-ops.spkTh           = -6;      % spike threshold in standard deviations (4)		
+ops.initialize      = 'fromData'; %'fromData' or 'no'		
+ops.spkTh           = -4;      % spike threshold in standard deviations (4)		
 ops.loc_range       = [3  1];  % ranges to detect peaks; plus/minus in time and channel ([3 1])		
 ops.long_range      = [30  6]; % ranges to detect isolated peaks ([30 6])		
 ops.maskMaxChannels = 5;       % how many channels to mask up/down ([5])		
