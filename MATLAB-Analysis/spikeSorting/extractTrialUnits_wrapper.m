@@ -1,6 +1,6 @@
 %% Wrapper File for Extracting Information from Binary files & Sorting Program Outputs
 %% Add Functions to Path
-addpath(genpath('C:\Users\Daniel\Documents\GitHub\htlab-ephys-pipeline\MATLAB-Analysis\Spike'))
+addpath(genpath('C:\Users\Daniel\Documents\GitHub\htlab-ephys-pipeline\MATLAB-Analysis\spikeSorting'))
 %% SECTION 1: Extracts spike times to _sortedmat
 sortedType = 'kilosort';
 sortOutputFolder = 'C:\PATH\TO\THE\SORTED\FOLDER\181108\preAutoMerge';

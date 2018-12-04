@@ -1,4 +1,4 @@
-function [] = plotPolar(m, s, selectUnits, discardCorner)
+function [] = plotPolar(m, s, stim, selectUnits, opt, saveFig)
 
 if strcmpi(selectUnits, 'all')
     selectUnits = s.clusters;
@@ -7,7 +7,7 @@ end
 for ii = selectUnits
     singleUnit = double(s.(sprintf('unit_%02i',ii)));
     if ~isempty(singleUnit)
-        singleUnit = singleUnit(m.pd(1) <= singleUnit & singleUnit <= m.pd(m.repeatIndex(end)));
+        singleUnit = singleUnit(m.pd(1) <= singleUnit & singleUnit <= m.pd(stim.repeatIndex(end)));
         lastFrameIdx = ones(length(singleUnit) + 1,1);
         for kk = 1:length(singleUnit)
             shiftedPD = m.pd(lastFrameIdx(kk):end) - singleUnit(kk);
@@ -16,12 +16,12 @@ for ii = selectUnits
         end
         lastFrameIdx(1) = [];
         
-        if discardCorner
-            priorVecAngles = atan2(m.oobMatchAngVel(:,2), m.oobMatchAngVel(:,1));
-            spikeVel = m.oobMatchAngVel(lastFrameIdx,:);
+        if opt.discardCorner
+            priorVecAngles = atan2(stim.oobMatchAngVel(:,2), stim.oobMatchAngVel(:,1));
+            spikeVel = stim.oobMatchAngVel(lastFrameIdx,:);
         else
-            priorVecAngles = atan2(m.matchAngVel(:,2), m.matchAngVel(:,1));
-            spikeVel = m.matchAngVel(lastFrameIdx,:);
+            priorVecAngles = atan2(stim.matchAngVel(:,2), stim.matchAngVel(:,1));
+            spikeVel = stim.matchAngVel(lastFrameIdx,:);
         end
         
         spikeVecAngles = atan2(spikeVel(:,2),spikeVel(:,1));
@@ -46,8 +46,10 @@ for ii = selectUnits
         polarplot([meanVecangle meanVecangle], [0, max(dir3)]);
         title(sprintf('unit\\_%02i',ii))
         
-        saveas(gcf, ['polar_unit_' num2str(ii) '_post'], 'epsc');
-        saveas(gcf, ['polar_unit_' num2str(ii) '_post'], 'fig');
+        if saveFig
+            saveas(gcf, [opt.preName '_polar_unit_' num2str(ii) '_post'], 'epsc');
+            saveas(gcf, [opt.preName '_polar_unit_' num2str(ii) '_post'], 'fig');
+        end
     else
         warning(['Unit ' num2str(ii) ' has no spikes. A heatmap will not be plotted...']);
     end

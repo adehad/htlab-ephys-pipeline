@@ -1,4 +1,4 @@
-function [m] = extractTrialADC_PD(rawBinary, m, outputFileName )
+function m = extractTrialADC_PD(rawBinary, m, outputFileName )
 % 
 % Example Usage
 %% Check Required Functions
@@ -158,7 +158,6 @@ if ~isempty(outputFileName)
 end
 end
 
-
 % Appended Functions
 function [events, eRising, eFalling, waves,xi] = get_events(x,ch,f,win,msec,thr,bgoff,recenter)
 %
@@ -191,7 +190,7 @@ tmax = size(x,2);
 xi = splitconv(x(ch,:),f);
 if bgoff
     xi = xi - mean(xi(flen:end-flen));
-end;
+end
 
 if thr > 0
 % events = find(diff(xi > thr) == 1) + 1;
@@ -211,7 +210,7 @@ if recenter ~= 0 %if recentering is required, we run the wave cropping loop twic
     tloops = 2;
 %     disp('recentering!!')    
 else tloops = 1 ;
-end;
+end
 
 for j = 1:length(events)
     event_j = events(j);
@@ -221,17 +220,17 @@ for j = 1:length(events)
             preb = win - event_j + 1;
         else prew = event_j - win;
             preb = 0;
-        end;
+        end
         if event_j+win > tmax
             postw = tmax;
             postb = win - (tmax - event_j);
         else postw = event_j+win;
             postb = 0;
-        end;
+        end
         wavetmp = [zeros(1,preb) x(ch,prew:postw) zeros(1,postb)];
         if bgoff
             wavetmp = wavetmp - mean(wavetmp(win-round(0.75*msec):win-round(0.5*msec)));
-        end;
+        end
         if k==1;
             switch recenter
                 case 1 %center at absolute maximum
@@ -242,7 +241,7 @@ for j = 1:length(events)
                     tnew = find(wavetmp(win:round(win+0.25*msec)) == min(wavetmp(win:round(win+0.25*msec)))) + win;
 %                     disp('neg peak')
                 otherwise  tnew = [];
-            end;
+            end
         end
         if ~isempty(tnew) %correction is required
             event_j = tnew(1) - (win+1) + event_j - 1;
@@ -252,12 +251,12 @@ for j = 1:length(events)
 %             hold on
 %             pause
 %             sprintf('tnew null!!')
-        end;
-    end;
+        end
+    end
     events(j) = event_j;
 %     waves = [waves; wavetmp];
     waves(j,:) = wavetmp;
-end;
+end
 
 waves = waves(1:j,:);
 end
@@ -290,7 +289,7 @@ while cmd ~= 'a'
             if bgoff
                 xmu = mean(x(tch,:));
             else xmu = 0;
-            end;
+            end
             [events,waves,xi] = get_events(x,tch,f,10,10,thr,bgoff,recenter);
             clf;
             hold on
@@ -313,10 +312,10 @@ while cmd ~= 'a'
             title(sprintf('%s\nfound %d events',cmdlist,length(events)));
         case 'b'
             ndata = input(sprintf('Enter new data load block size (old= %d): ',ndata));
-    end;
+    end
     %     [x1,y1,cmd] = ginput2(1);
     cmd = input('next command: ','s');
-end;
+end
 fclose(fid);
 end
 
@@ -341,19 +340,19 @@ function [dnew,fmax] = tconv(data,kernel,cmid)
 % [dnew,fmax] = tconv(data,kernel,cmid)
 %
 
-if ~exist('cmid','var')  || isempty(cmid),  cmid = 0; end;
+if ~exist('cmid','var')  || isempty(cmid),  cmid = 0; end
 dnew = conv(data,kernel);
 if (cmid == 0)
     fmax = find(kernel == max(kernel),1);
 else fmax = round(length(kernel)/2);
-end;
+end
 dnew = dnew(fmax:fmax+length(data)-1);
 
 % recenter even-length (non-symmetric) filter with cmid centering)
 if (mod(length(kernel),2) == 0) & cmid == 1
     dnewi = interp(dnew,2);
     dnew = dnewi(2:2:end);
-end;
+end
 end
 
 function y = splitconv(d,f)
