@@ -17,11 +17,11 @@ filename.sortOutputAll = extractTrialUnits(sortedType,...           % sorting Pr
                                        mergedInfoCSV, ...       % Path + Name of merge_info.csv
                                        clusterType);            % ['XYZ' ; 'ABC'] - rows containing different cluster types to keep - note: depends on your manual clustering - leave empty if you want to keep all of them
 % Select a single sortOutput
-filename.sortOutput = [sortOutputFolder, '\', filename.sortOutputAll(1,:)];   
+filename.sortOutput = [sortOutputFolder, filesep, filename.sortOutputAll(1,:)];   
 %% SECTION 2: Establish Metafile struct
 filename.folder = 'C:\Users\Daniel\Box Sync\DragonVision_DanielKo\Data\Ephys\181116\'; 
-filename.binary=[filename.folder, '\', '2018-11-16_16-23-50\2018-11-16_16-23-50_padded.bin'];
-filename.sortOutput=[filename.folder, '\', '181116_05_sorted.mat'];
+filename.binary=[filename.folder, filesep, '2018-11-16_16-23-50\2018-11-16_16-23-50_padded.bin'];
+filename.sortOutput=[filename.folder, filesep, '181116_05_sorted.mat'];
 if isempty(filename.binary)
     [fileName, filePath] = uigetfile('*.bin','Select experiment raw binary data .bin file:');
     filename.binary = [filePath filesep fileName];
