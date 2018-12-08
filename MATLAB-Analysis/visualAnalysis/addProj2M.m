@@ -1,12 +1,5 @@
-function stim = addProj2M(m, nLoops, pdDiffThreshold)
-%% Basic projection info
-stim.D=22.5;               % SET: Distance of the DF head out of the screen
-stim.W=67;                 % SET: Width of the projection
-stim.H=91;                 % SET: Height of the projection
-stim.C=13.5;               % SET: Distance of DF head from centre of screen
-stim.xPix = 480;           % xaxis pixel count
-stim.yPix = 640;           % yaxis pixel count
-
+function stim = addProj2M(m, stim, nLoops, pdDiffThreshold)
+%% Basic projection info derivation
 stim.xMap=stim.xPix/stim.W;
 stim.yMap=stim.yPix/stim.H;
 dt=1/stim.fps;
@@ -15,7 +8,6 @@ dt=1/stim.fps;
 [stim.stimFileName, stim.stimFilePath] = uigetfile('*.txt','Select stimGL StimData file:');
 stimData=importdata([stim.stimFilePath,stim.stimFileName]);
 stim.stimPos = stimData.data(:,5:6);
-stim.StimGL_nloops = nLoops; % SET: Number of loops in stimGL
 
 %% Get phododiode trial start indices and photodiode trial lengths
 pdDiff = double(diff(m.pd));

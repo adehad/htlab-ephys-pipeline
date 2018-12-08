@@ -1,28 +1,25 @@
-%% Wrapper File for Extracting Information from Binary files & Sorting Program Outputs
-%% Add Functions to Path
-addpath(genpath('C:\Users\Daniel\Documents\GitHub\htlab-ephys-pipeline\MATLAB-Analysis\visualAnalysis'))
-%% SECTION 1: Extract PD data
-m.nChans    = 1;        % number of channels
-m.pdch      = 1;        %assume pd is last ch
-m.fps       = 180;      % (projector frame rate)*3  (*3 if B&W)
-% m.pdthr = 3e3; % Can set now, or comment out to set graphically in function (telemetry)
-m.pdthr     = 3;        % OpenEphys projection PD 
+%% SECTION 0: Load spike and pd data
+uiopen('*_visual.mat');
 
-m = extractTrialADC_PD(filename.rawADC, ... % Binary File
-                        m, ....     % metafile struct, m
-                        [] ); % filename to store output, leave as [] if you don't want to save
+%% SECTION 1: Options
+opt.preName = '05'; % first part of name of saved figures
+opt.tsdnLatency = 0; % latency of tsdns in ms
+selectUnits = 'all'; % array of units to plot {'all [X,Y,Z]}
 
-%% SECTION 2: Add stimulus and projection data
-nLoops = 5;
-pdDiffThreshold = 1.5e3;
+opt.rasterBinSize = 100; % for raster: bin size of spike rate histogram in ms
 
-stim = addProj2M(m, nLoops, pdDiffThreshold);
+opt.drawingMode = 'none'; % for heatmap: how to draw orientation distribution within bin {'none, 'arrows', 'blob'}
+opt.units = 'angle'; % for heatmap and topography: units on sides of heatmap {'pixels' 'angle'}
+opt.sqSize = 10; % for heatmap and topography: sizes of square bins
+opt.discardCorner = 1; % for heatmap, polar and topography: whether to ignore out of bounds data {1, 0}
+%% SECTION 2: Raster plot
+plotRaster(m,s,stim,selectUnits,opt,0);
 
-%% SECTION 2.5: Save .mat
-save('181116_05_visual.mat', 'm', 's', 'stim', 'filename')
+%% SECTION 3: Heatmap
+plotHeatmap(m,s,stim,selectUnits,opt,0);
 
-%% SECTION 2.9999: Options
-opt.drawingMode
-opt.units
-opt.
-%% SECTION 3: Raster plot
+%% SECTION 4: Polar plot
+plotPolar(m,s,stim,selectUnits,opt,0);
+
+%% SECTION 5: Orientation topography
+plotOrientationTopography(m,s,stim,selectUnits,opt,0);
