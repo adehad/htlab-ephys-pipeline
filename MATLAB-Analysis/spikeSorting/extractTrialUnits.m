@@ -46,8 +46,14 @@ if strcmpi(sortedType,'kilosort') % case insensitive srtcmp
     if isfile('cluster_groups.csv') % i.e. file exists
         cluster_groups = tdfread('cluster_groups.csv');
     else
-        error(['cluster_groups.csv does not exist in the provided folder', newline, ...
-               sortOutputFolder,newline,'Make sure you Ctrl+S after you cluster in Phy']);
+       warning(['cluster_groups.csv does not exist in the kilosort output folder', newline, ...
+               sortOutputFolder,newline,'Open output in Phy and then hit Ctrl+S']);
+       warning([newline,'Artificially creating cluster_groups.csv',newline])
+       cluster_groups.cluster_id = sort(unique(spike_clusters));
+       for ii=1:size(cluster_groups.cluster_id,1)
+        cluster_groups.group(ii) = "unsorted";
+       end
+       cluster_groups.group = cluster_groups.group';
     end
     %% Store info for desired clusters
     clusters = [];
