@@ -67,4 +67,4 @@ srcDir=$HOME/data/test # Folder where your data is (incl. channel map, kilosort_
   
 # Copies processed data to srcDir [Optional]
 	mkdir $srcDir/$PBS_JOBID
-	cp -a *AutoMerge/* $srcDir/$PBS_JOBID
+	cp -a *AutoMerge/ $srcDir/$PBS_JOBID
