@@ -49,23 +49,27 @@ if strcmpi(sortedType,'kilosort') % case insensitive srtcmp
     end
     %% Store info for desiredclusters
     clusters = [];
-    if ~isempty(clusterType) % cluster types specified by input arguments - e.g. ['good';'unsorted']
-        for cc=1:size(clusterType,1)
-            for ii=1:size(cluster_groups.cluster_id,1)
-                if contains( cluster_groups.group(ii,:), clusterType(cc,:),'IgnoreCase',true )
-                    clusters = [clusters cluster_groups.cluster_id(ii)]; %accumulate only the good clusters
-                end
+    if isempty(clusterType) % cluster types specified by input arguments - e.g. ['good';'unsorted']
+        clusterType = ['good';'unsorted';'MUA'];
+        warning('No cluster types specified to extract, defaulting to: good, unsorted, MUA')
+    end
+    
+    for cc=1:size(clusterType,1)
+        for ii=1:size(cluster_groups.cluster_id,1)
+            if contains( cluster_groups.group(ii,:), clusterType(cc,:),'IgnoreCase',true )
+                clusters = [clusters cluster_groups.cluster_id(ii)]; %accumulate only the good clusters
             end
         end
-        s.clusters = num2str(clusters,'%02i');      % storage of what clusters were kepts
-        s.cluster_groups = cluster_groups.group; % preserving the original allocations by storing this struct
-            else % if no cluster types specified, just take them all
-        clusters=sort(unique(spike_clusters));
-        if ~isempty(cluster_groups)
-            s.clusters = num2str(cluster_groups.cluster_id,'%02i'); % storage of what clusters were kepts
-            s.cluster_groups = cluster_groups.group; % preserving the original allocations by storing this struct
-        end
     end
+    s.clusters = num2str(clusters','%02i');      % storage of what clusters were kepts (note: transpose)
+    s.cluster_groups = cluster_groups.group; % preserving the original allocations by storing this struct
+        else % if no cluster types specified, just take them all
+    clusters=sort(unique(spike_clusters));
+    if ~isempty(cluster_groups)
+        s.clusters = num2str(cluster_groups.cluster_id,'%02i'); % storage of what clusters were kepts
+        s.cluster_groups = cluster_groups.group; % preserving the original allocations by storing this struct
+    end
+    
 
 
 elseif strcmpi(sortedType,'klusta') % case insensitive srtcmp
@@ -75,6 +79,11 @@ elseif strcmpi(sortedType,'klusta') % case insensitive srtcmp
     spike_times = hdf5read(kwikFileName, '/channel_groups/0/spikes/time_samples');
     spike_clusters = hdf5read(kwikFileName, '/channel_groups/0/spikes/clusters/main');
     clusters = [];
+    if isempty(clusterType) % cluster types specified by input arguments - e.g. ['good';'unsorted']
+        clusterType = ['good';'unsorted';'MUA'];
+        warning('No cluster types specified to extract, defaulting to: good, unsorted, MUA')
+    end
+        
     for cc=1:size(clusterType,1)
         for ii=1:length(kwik_d)
             clu_type=cell2mat(kwik_d(ii).id(1,1));
@@ -83,8 +92,8 @@ elseif strcmpi(sortedType,'klusta') % case insensitive srtcmp
             end
         end
     end
-    
-    s.clusters = clusters;      % storage of what clusters were kepts
+    s.clusters = num2str(clusters','%02i');      % storage of what clusters were kepts (note: transpose)
+
 else
     error(['sortedType provided does not match the accepted :', newline, ...
               ' ''kilosort'' ', newline,' ''klusta'' ' ]);
