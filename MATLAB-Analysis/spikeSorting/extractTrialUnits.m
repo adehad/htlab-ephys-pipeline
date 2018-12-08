@@ -1,4 +1,4 @@
-function extractUnitsFileName = extractTrialUnits(sortedType,sortOutputFolder, file, startTrial, csvName, clusterType)
+function extractUnitsFileNameAll = extractTrialUnits(sortedType,sortOutputFolder, file, startTrial, csvName, clusterType)
 %%% COPY PASTE JOB FOR NOW
 % sortedType = klusta or kilosort
 % file = [ YYMMDD ; KWIK FILE]      % KWIK file only needed if 'klusta'
@@ -20,6 +20,7 @@ if ~isempty(csvName)        % if name is not empty
 
     split_point = [0; fileDetails.index]; 
 else % Assume file is not merged - just a single experiment
+    warning('Assuming file is not merged')
     split_point = [0; Inf]; % So we extract all spike_times for when we use non-merged data ?
 end
 
@@ -28,6 +29,7 @@ end
     cd(sortOutputFolder)
     
     clear s % reset the structure
+    extractUnitsFileNameAll = []; % reset filenames
     
 %% Cluster extraction based on sorting program
 if strcmpi(sortedType,'kilosort') % case insensitive srtcmp
@@ -47,10 +49,10 @@ if strcmpi(sortedType,'kilosort') % case insensitive srtcmp
         error(['cluster_groups.csv does not exist in the provided folder', newline, ...
                sortOutputFolder,newline,'Make sure you Ctrl+S after you cluster in Phy']);
     end
-    %% Store info for desiredclusters
+    %% Store info for desired clusters
     clusters = [];
     if isempty(clusterType) % cluster types specified by input arguments - e.g. ['good';'unsorted']
-        clusterType = ['good';'unsorted';'MUA'];
+        clusterType = ["good";"unsorted";"MUA"];
         warning('No cluster types specified to extract, defaulting to: good, unsorted, MUA')
     end
     
@@ -62,14 +64,8 @@ if strcmpi(sortedType,'kilosort') % case insensitive srtcmp
         end
     end
     s.clusters = num2str(clusters','%02i');      % storage of what clusters were kepts (note: transpose)
+    s.clusters = string(s.clusters);            % convert to string for easy iteration
     s.cluster_groups = cluster_groups.group; % preserving the original allocations by storing this struct
-        else % if no cluster types specified, just take them all
-    clusters=sort(unique(spike_clusters));
-    if ~isempty(cluster_groups)
-        s.clusters = num2str(cluster_groups.cluster_id,'%02i'); % storage of what clusters were kepts
-        s.cluster_groups = cluster_groups.group; % preserving the original allocations by storing this struct
-    end
-    
 
 
 elseif strcmpi(sortedType,'klusta') % case insensitive srtcmp
@@ -80,19 +76,20 @@ elseif strcmpi(sortedType,'klusta') % case insensitive srtcmp
     spike_clusters = hdf5read(kwikFileName, '/channel_groups/0/spikes/clusters/main');
     clusters = [];
     if isempty(clusterType) % cluster types specified by input arguments - e.g. ['good';'unsorted']
-        clusterType = ['good';'unsorted';'MUA'];
+        clusterType = ["good";"unsorted";"MUA"];
         warning('No cluster types specified to extract, defaulting to: good, unsorted, MUA')
     end
         
     for cc=1:size(clusterType,1)
         for ii=1:length(kwik_d)
             clu_type=cell2mat(kwik_d(ii).id(1,1));
-            if strcmpi(clu_type, clusterType(cc,:)) % case insensitive compare
+            if contains(clu_type, clusterType(cc,:)) % case insensitive compare
                 clusters = [clusters kwik_d(ii).icell]; %accumulate only the good clusters
             end
         end
     end
     s.clusters = num2str(clusters','%02i');      % storage of what clusters were kepts (note: transpose)
+    s.clusters = string(s.clusters);            % convert to string for easy iteration
 
 else
     error(['sortedType provided does not match the accepted :', newline, ...
@@ -125,7 +122,7 @@ for tt=1:n_trial-1 % go through each trial
     save(extractUnitsFileName,'s','trial_spikes','trial_clusters') % save structure s, trial_cluster, and trial_spikes to each individiaul trial as yymmdd_nn_sorted.mat
     disp(['saved data for trial: ',trialID]);
     
-    extractUnitsFileName = [file(1,1:6),'_',trialID,'_sorted.mat'];
+    extractUnitsFileNameAll = [extractUnitsFileNameAll; (extractUnitsFileName)];
     
 end
     

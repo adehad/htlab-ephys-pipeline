@@ -1,27 +1,30 @@
 %% Wrapper File for Extracting Information from Binary files & Sorting Program Outputs
+% Use Ctrl+Enter (Windows) to run section by section
 %% Add Functions to Path
-addpath(genpath('C:\Users\Daniel\Documents\GitHub\htlab-ephys-pipeline\MATLAB-Analysis\spikeSorting'))
+addpath(genpath('C:\Users\Daniel\Documents\GitHub\htlab-ephys-pipeline\MATLAB-Analysis\spikeSorting')) % Path to spikeSorting folder of git
 %% SECTION 1: Extracts spike times to _sortedmat
-sortedType = 'kilosort';
+sortedType = 'kilosort';            
 sortOutputFolder = 'C:\PATH\TO\THE\SORTED\FOLDER\181108\preAutoMerge';
 file = '181108';
 startTrial = 1;
-csvName = [];
-clusterType = 'unsorted'; %good, unsorted, noise or empty (when there has been no manual sorting, theres only unsorted). Arrays accepted
-filename.sortOutput= extractTrialUnits(sortedType,...           % sorting Program used
+mergedInfoCSV = [];
+clusterType = "unsorted"; % good, unsorted, noise or [] (empty) (when there has been no manual sorting, there's only unsorted). 
+                          % Arrays accepted e.g. ["good";"unsorted";"MUA"]
+filename.sortOutputAll = extractTrialUnits(sortedType,...           % sorting Program used
                                        sortOutputFolder, ...    % location of sorting output
                                        file, ....               % ['YYMMDD' ; 'XYZ.kwik'] - XYZ.kwik is only if you are using klusta
                                        startTrial, ...          % YYMMDD_X - where is is starting number
-                                       csvName, ...             % Name of merge_info csv
+                                       mergedInfoCSV, ...       % Path + Name of merge_info.csv
                                        clusterType);            % ['XYZ' ; 'ABC'] - rows containing different cluster types to keep - note: depends on your manual clustering - leave empty if you want to keep all of them
-
-filename.sortOutput = [sortOutputFolder, filename.sortOutput];   
+% Select a single sortOutput
+filename.sortOutput = [sortOutputFolder, '\', filename.sortOutputAll(1,:)];   
 %% SECTION 2: Establish Metafile struct
-filename.raw=['C:\Users\Daniel\Box Sync\DragonVision_DanielKo\Data\Ephys\181116\2018-11-16_16-23-50\2018-11-16_16-23-50_padded.bin'];
-filename.sortOutput=['C:\Users\Daniel\Box Sync\DragonVision_DanielKo\Data\Ephys\181116\181116_05_sorted.mat'];
-if isempty(filename.raw)
-    [fileName, filePath] = uigetfile('*.bin','Select experiment raw data .bin file:');
-    filename.raw = [filePath filesep fileName];
+filename.folder = 'C:\Users\Daniel\Box Sync\DragonVision_DanielKo\Data\Ephys\181116\'; 
+filename.binary=[filename.folder, '\', '2018-11-16_16-23-50\2018-11-16_16-23-50_padded.bin'];
+filename.sortOutput=[filename.folder, '\', '181116_05_sorted.mat'];
+if isempty(filename.binary)
+    [fileName, filePath] = uigetfile('*.bin','Select experiment raw binary data .bin file:');
+    filename.binary = [filePath filesep fileName];
 end
 if isempty(filename.sortOutput)
     [fileName,filePath] = uigetfile('*.mat','Select experiment _sorted.mat file:');
@@ -47,11 +50,12 @@ m.msec      = m.sRateHz/1000; % conversion factor from ms time to sample number
 m.nChans    = 4;            % number of channels
 m.ech       = 1:m.nChans-1; % ephys channel(s) is everything except the last
 
-[m,s] = extractTrialUnitWaves(filename.raw, ... % Binary File
+[m,s] = extractTrialUnitWaves(filename.binary, ... % Binary File
                       filename.sortOutput, ...  % _sorted.mat file
                       m, ...                    % metafile struct, m
                       0, ...                    % 1: if you want to do secondary template matching
                       []);              % filename to store output, leave as [] if you don't want to save
                                                            
-%%
-save('181116_05.mat', 'm', 's', 'filename')
+%% SECTION 4: Saves Output for a given filename.sortOutput
+% renamed YYMMDD_XX_sorted.mat -> YYMMDD_XX_extracted.mat
+save([filename.sortOutput(1:end-11),'_extracted.mat'], 'm', 's', 'filename')
