@@ -4,7 +4,7 @@ addpath(genpath('KiloSort/')) % path to kilosort folder
 addpath(genpath('npy-matlab/')) % path to npy-matlab scripts
 
 pathToYourConfigFile = ''; % take from Github folder and put it somewhere else (together with the master_file)
-run(fullfile(pathToYourConfigFile, 'StandardConfig_MOVEME.m'))
+run(fullfile(pathToYourConfigFile, 'kilosort_settings.m'))
 
 tic; % start timer
 %
