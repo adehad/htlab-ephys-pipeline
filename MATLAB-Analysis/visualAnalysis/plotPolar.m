@@ -45,10 +45,14 @@ for ii = selectUnits
         set(gcf,'color','w');
         polarplot([meanVecangle meanVecangle], [0, max(dir3)]);
         title(sprintf('unit\\_%02i',ii))
+        hold off
         
-        if saveFig
-            saveas(gcf, [opt.preName '_polar_unit_' num2str(ii) '_post'], 'epsc');
-            saveas(gcf, [opt.preName '_polar_unit_' num2str(ii) '_post'], 'fig');
+        if saveFig == 2
+            export_fig(sprintf('%s_polar_unit_%s.eps',opt.preName,num2str(ii)))
+            saveas(gcf, [opt.preName '_polar_unit_' num2str(ii)], 'fig');
+        elseif saveFig
+            saveas(gcf, [opt.preName '_polar_unit_' num2str(ii)], 'epsc');
+            saveas(gcf, [opt.preName '_polar_unit_' num2str(ii)], 'fig');
         end
     else
         warning(['Unit ' num2str(ii) ' has no spikes. A heatmap will not be plotted...']);

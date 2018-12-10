@@ -120,6 +120,7 @@ for ii = selectUnits
             end
             
             % draw the big mean directional arrow of each bin
+            hold on
             meanVec = mean(spikeVel(sqIndex,:),1,'omitnan');
             quiver(sqMiddle(1), sqMiddle(2), 2*sizeMod*meanVec(1)/norm(meanVec), ...
                 2*sizeMod*meanVec(2)/norm(meanVec), ...
@@ -129,13 +130,17 @@ for ii = selectUnits
 %                 saveas(gcf, [opt.preName '_heatmap_unit_', num2str(ii), '_loweredges_', ...
 %                     num2str(uniqueLowerEdges(jj,1)), '_', num2str(uniqueLowerEdges(jj,2))], 'epsc');
 %             end
-            hold off
         end
+        hold off
         % save figures
-        if saveFig
+        if saveFig == 2
+            export_fig(sprintf('%s_heatmap_unit_%s_post.eps',opt.preName,num2str(ii)))
+            saveas(gcf, [opt.preName '_heatmap_unit_' num2str(ii) '_post'], 'fig');
+        elseif saveFig
             saveas(gcf, [opt.preName '_heatmap_unit_' num2str(ii) '_post'], 'epsc');
             saveas(gcf, [opt.preName '_heatmap_unit_' num2str(ii) '_post'], 'fig');
         end
+        
     else
         warning(['Unit ' num2str(ii) ' has no spikes. A heatmap will not be plotted...']);
     end

@@ -69,7 +69,10 @@ for ii = selectUnits
         
         adjustLims(axCellList)
         
-        if saveFig
+        if saveFig == 2
+            export_fig(sprintf('%s_raster_unit_%s.eps',opt.preName,num2str(ii)))
+            saveas(gcf, [opt.preName '_raster_unit_' num2str(ii)], 'fig');
+        elseif saveFig
             saveas(gcf, [opt.preName '_raster_unit_' num2str(ii)], 'epsc');
             saveas(gcf, [opt.preName '_raster_unit_' num2str(ii)], 'fig');
         end

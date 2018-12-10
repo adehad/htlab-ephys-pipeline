@@ -1,8 +1,8 @@
-function stim = addProj2M(m, stim, nLoops, pdDiffThreshold)
+function stim = addProj2M(m, stim, pdDiffThreshold)
 %% Basic projection info derivation
 stim.xMap=stim.xPix/stim.W;
 stim.yMap=stim.yPix/stim.H;
-dt=1/stim.fps;
+dt=1/m.fps;
 
 %% Get Stimulus Data
 [stim.stimFileName, stim.stimFilePath] = uigetfile('*.txt','Select stimGL StimData file:');
@@ -13,7 +13,7 @@ stim.stimPos = stimData.data(:,5:6);
 pdDiff = double(diff(m.pd));
 [~, stim.repeatIndex]=find(pdDiff>pdDiffThreshold);
 
-if length(stim.repeatIndex) < nLoops
+if length(stim.repeatIndex) < stim.StimGL_nloops
     stim.repeatIndex(end+1) = m.pd(end);
 end
 stim.repeatIndex = [0, stim.repeatIndex];
@@ -21,14 +21,14 @@ for ii = 1:length(stim.repeatIndex)-1
     stim.stimLength(ii) = m.pd(stim.repeatIndex(ii+1)) - m.pd(stim.repeatIndex(ii)+1);
     stim.trialFrameCounts(ii) = length(find(m.pd >= m.pd(stim.repeatIndex(ii)+1) & m.pd <= m.pd(stim.repeatIndex(ii+1))));
 end
-stim.repeatIndex = stim.repeatIndex(1:nLoops+1);
-stim.stimLength = stim.stimLength(1:nLoops);
-stim.trialFrameCounts = stim.trialFrameCounts(1:nLoops);
+stim.repeatIndex = stim.repeatIndex(1:stim.StimGL_nloops+1);
+stim.stimLength = stim.stimLength(1:stim.StimGL_nloops);
+stim.trialFrameCounts = stim.trialFrameCounts(1:stim.StimGL_nloops);
 
 %% Find number of frames actually shown and find dropped frames
 stim.pdIntervals = diff(m.pd(1:stim.repeatIndex(end)));
-stim.doubleSkipIdx = m.pd(stim.pdIntervals < pdDiffThreshold & stim.pdIntervals > 3*2.2*stim.sRateHz/stim.fps);
-stim.singleSkipIdx = m.pd(stim.pdIntervals <= 3*2.2*stim.sRateHz/stim.fps & stim.pdIntervals > 3*1.2*stim.sRateHz/stim.fps);
+stim.doubleSkipIdx = m.pd(stim.pdIntervals < pdDiffThreshold & stim.pdIntervals > 3*2.2*m.sRateHz/m.fps);
+stim.singleSkipIdx = m.pd(stim.pdIntervals <= 3*2.2*m.sRateHz/m.fps & stim.pdIntervals > 3*1.2*m.sRateHz/m.fps);
 
 %% Reconstruct target pixel and angular data
 stim.stimVel=diff(stim.stimPos,1)/dt; % get velocity at each t
@@ -63,4 +63,6 @@ for ii = 1:length(stim.repeatIndex)-1
     stim.oobMatchAngPos(repeatArray,:) = oobAngStimPos(1:length(repeatArray),:);
     stim.oobMatchAngVel(repeatArray,:) = oobAngStimVel(1:length(repeatArray),:);
 end
+
+disp('Done loading stimulus data!')
 end
