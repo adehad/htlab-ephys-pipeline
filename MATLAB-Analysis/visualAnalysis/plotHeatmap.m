@@ -70,13 +70,26 @@ for ii = selectUnits
         
         % plot histogram of spike positions
         figure
-        histogram2(spikePos(:,1),spikePos(:,2),Xedges,Yedges, ...
-            'DisplayStyle','tile','ShowEmptyBins','on');
+        %histogram2(spikePos(:,1),spikePos(:,2),Xedges,Yedges, ...
+        %    'DisplayStyle','tile','ShowEmptyBins','on');
+        [histVal, histC] = hist3(spikePos,{Xedges Yedges});
+        histVal = histVal/stim.StimGL_nloops;
+        histVal(1,1)=histVal(1,1)-1; histVal(end,end) = histVal(end,end)-1; % subtract elements we added
+%         [N2,c2] = hist3([[xyTrajTrue(leftToRight,1);0;max(xyTrajTrue(:,1))], ...   % Trajectoriess Histogram - i.e. how often is the trajectory in the same bin as we used for spikes
+%                  [xyTrajTrue(leftToRight,2);0;max(xyTrajTrue(:,2))]], ...
+%                  numBins); N2(1,1)=N2(1,1)-1; N2(end,end) = N2(end,end)-1; % subtract elements we added
+%           if gaussianSigma<=0
+        imagesc(histC{1}([1 end]),histC{2}([1 end]),histVal');     % c - pixel centres, N - pixel values (NOTE: TRANSPOSE)
+%           else
+%         imagesc(c{1}([1 end]),c{2}([1 end]),imgaussfilt(histVal',gaussianSigma));
+%           end            
+        axis xy % ensure y axis points up
+        colorbar
         set(gcf,'color','w');
         title(sprintf('unit\\_%02i',ii))
         xlabel('azimuth (°)'); ylabel('elevation (°)');
         colormap hot; c = colorbar; c.Label.String = 'Spike count';
-        axis equal
+        axis equal tight
         
 %         if saveFig
 %             saveas(gcf, [opt.preName '_heatmap_unit_' num2str(ii) '_pre'], 'epsc');

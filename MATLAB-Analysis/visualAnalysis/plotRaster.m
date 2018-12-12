@@ -80,6 +80,7 @@ for ii = selectUnits
         warning(['Unit ' num2str(ii) ' has no spikes. A raster will not be plotted...']);
     end
 end
+end
 
 %% UI control
 % UI Controls, we need a variable to store the axis handle for each subplot
@@ -102,6 +103,7 @@ upperLim = uicontrol(...
     'String',           num2str(axCellList{1}.XLim(2),'%.1e'),...
     'Callback',         {@setAxLim,axCellList,2}...
     );
+end
 
 function setAxLim(src, event, axCellList,LorR)
 str = get(src, 'String'); % Correct way to get data 'edit' fields
@@ -120,3 +122,4 @@ for ii=1:size(axCellList,2)
     axCellList{ii}.XLim = xL;
 end
 drawnow
+end
