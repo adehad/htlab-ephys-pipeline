@@ -1,51 +1,32 @@
-fileName = 4;
+%% get data
+fileName = '100_CH17.continuous';
 
 [data, ~, ~] = load_open_ephys_data(fileName);
 
-axCellList{1} = plot(data);
+%% non filtered
+cutData = data(630000:640000);
+%cutData = data(108000:115000);
+figure
+plot(cutData,'b')
+hold on
 
-adjustLims(axCellList)
+%% filtered
+dataDiscard = lowpass(double(cutData),100,30000,'Steepness',0.999);
+dataFilt = cutData - dataDiscard;
+plot(dataFilt,'g')
 
-function adjustLims(axCellList)
-lowerLim = uicontrol(...
-    'style',            'edit',...
-    'units',            'pixels',...
-    'position',         [0 0 80 22],... [LEFT BOTTOM WIDTH HEIGHT]
-    'ForegroundColor',  [0 0 0 0],...
-    'String',           num2str(axCellList{1}.XLim(1),'%.1e'),...
-    'Callback',         {@setAxLim,axCellList,1}...
-    );
-upperLim = uicontrol(...
-    'style',            'edit',...
-    'units',            'pixels',...
-    'position',         [80 0 80 22],... [LEFT BOTTOM WIDTH HEIGHT]
-    'ForegroundColor',  [0 0 0 0],...
-    'String',           num2str(axCellList{1}.XLim(2),'%.1e'),...
-    'Callback',         {@setAxLim,axCellList,2}...
-    );
-end
+dataDiscard = lowpass(double(cutData),600,30000,'Steepness',0.999);
+dataFilt = cutData - dataDiscard;
+plot(dataFilt,'m')
 
-function setAxLim(src, event, axCellList,LorR)
-str = get(src, 'String'); % Correct way to get data 'edit' fields
-if isnan(str2double(str))     % is not a number?
-    set(src, 'String','0');  % reset to 0
-    warndlg('Input must be numerical'); % warn dialog
-end
-xL = axCellList{1}.XLim;
-switch LorR
-    case 1
-        xL(1) = str2double(str);
-    case 2
-        xL(2) = str2double(str);
-end
-for ii=1:size(axCellList,2)
-    axCellList{ii}.XLim = xL;
-end
-drawnow
-end
+dataFilt = highpass(double(cutData),400,30000,'Steepness',0.999);
+plot(dataFilt,'y')
 
+dataFilt = highpass(double(cutData),600,30000,'Steepness',0.999);
+plot(dataFilt,'r')
 
-
+legend('raw','lowpass100','lowpass600','highpass400','highpass600');
+%%
 %%%% OPEN EPHYS DATA LOAD FUNCTION
 %%%% https://github.com/open-ephys/analysis-tools/blob/master/load_open_ephys_data.m
 function [data, timestamps, info] = load_open_ephys_data(filename)

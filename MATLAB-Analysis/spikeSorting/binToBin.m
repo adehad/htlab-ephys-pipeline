@@ -77,52 +77,55 @@ if ~isempty(dataCh)
         fileID = fopen(dataNames(ii));
         tempData = fread(fileID,[dataCh, Inf], 'int16','l'); % little endian open
         tempData = int16(tempData);
+        tempData = reshape(tempData,dataCh,[]);
         fclose(fileID);
         
         % interlacing, if the option was enabled
-%         if opt.interlaceCh
-%             if isAnInteger(dataCh/2) % is it an integer
-%                 tempData = zeros(dataCh/2, size(tempData,2)*2 );
-%                 for kk=1:dataCh/2
-%                     tempData(kk,1:2:end) = tempData(kk,:);
-%                     tempData(kk,2:2:end) = tempData(kk+(dataCh/2),:);
-%                 end
-%             else
-%                 warning(['InterlaceCh set to 1, but not enough channels to'...
-%                     'interlace. Skipping interlacing...'])
-%             end
-%             
-%             if opt.overwriteFiles || ~isfile(newNameINTERLACED(ii))
-%                 fileID = fopen(newNameINTERLACED(ii),'w');
-%                 fileLock = 0;
-%             else
-%                 fileLock = 1;
-%             end
-%         else
-%             if opt.overwriteFiles || ~isfile(newName(ii))
-%                 fileID = fopen(newName(ii),'w');
-%                 fileLock = 0;
-%             else
-%                 fileLock = 1;
-%             end
-%         end
-%         
-%         if opt.subtract50
-%             if opt.interlaceCh
-%                 if isAnInteger(length(dataCh)/2)
-%                     for jj=1:length(dataCh)/2
-%                         tempData = tempData-lowpass(tempData,100,opt.subtract50*length(dataCh)/2,'Steepness',0.01);
-%                     end
-%                 end
-%             else
-%                 for jj=1:length(dataCh)
-%                     tempData = tempData-lowpass(tempData,100,opt.subtract50,'Steepness',0.01);
-%                 end
-%             end
-%         end
-        if opt.subtract50
-            tempData = int16(double(tempData)-lowpass(double(tempData),100,opt.subtract50,'Steepness',0.99));
+        if opt.interlaceCh
+            if isAnInteger(length(dataCh)/2) % is it an integer
+                dataChL = length(dataCh)/2;
+                tempData = zeros(dataChL, size(tempData,2)*2 );
+                for kk=1:dataChL
+                    tempData(kk,1:2:end) = tempData(kk,:);
+                    tempData(kk,2:2:end) = tempData(kk+(dataChL),:);
+                end
+                
+                if opt.overwriteFiles || ~isfile(newNameINTERLACED(ii))
+                    fileID = fopen(newNameINTERLACED(ii),'w');
+                    fileLock = 0;
+                else
+                    fileLock = 1;
+                end
+            else
+                warning(['InterlaceCh set to 1, but not enough channels to'...
+                    'interlace. Skipping interlacing...'])
+            end
+            
+        else
+            opt.interlaceCh = 0;
+            dataChL = length(dataCh);
+            if opt.overwriteFiles || ~isfile(newName(ii))
+                fileID = fopen(newName(ii),'w');
+                fileLock = 0;
+            else
+                fileLock = 1;
+            end
         end
+        
+        if opt.filt
+            if strcmpi(opt.mode, 'lowpass')
+                for jj=1:dataChL
+                    tempData(jj,:) = int16(double(tempData(jj,:))-...
+                        lowpass(double(tempData(jj,:)),opt.cutoff,opt.sRate*(opt.interlaceCh+1),'Steepness',0.99));
+                end
+            else
+                for jj=1:dataChL
+                    tempData(jj,:) = int16(highpass(double(tempData(jj,:)),...
+                        opt.cutoff,opt.sRate*(opt.interlaceCh+1),'Steepness',0.99));
+                end
+            end
+        end
+        
         
         % create new split data .bin file
         formattedData = ones(nChDesired,length(tempData),'int16');

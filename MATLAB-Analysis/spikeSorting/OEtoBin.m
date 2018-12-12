@@ -91,23 +91,27 @@ if ~isempty(dataCh)
         % interlacing, if the option was enabled
         if opt.interlaceCh
             if isAnInteger(length(dataCh)/2) % is it an integer
-                tempData = zeros(length(dataCh)/2, size(tempData,2)*2 );
-                for kk=1:length(dataCh)/2
+                dataChL = length(dataCh)/2;
+                tempData = zeros(dataChL, size(tempData,2)*2 );
+                for kk=1:dataChL
                     tempData(kk,1:2:end) = tempData(kk,:);
-                    tempData(kk,2:2:end) = tempData(kk+(length(dataCh)/2),:);
+                    tempData(kk,2:2:end) = tempData(kk+(dataChL),:);
+                end
+                
+                if opt.overwriteFiles || ~isfile(newNameINTERLACED(ii))
+                    fileID = fopen(newNameINTERLACED(ii),'w');
+                    fileLock = 0;
+                else
+                    fileLock = 1;
                 end
             else
                 warning(['InterlaceCh set to 1, but not enough channels to'...
                     'interlace. Skipping interlacing...'])
             end
             
-            if opt.overwriteFiles || ~isfile(newNameINTERLACED(ii))
-                fileID = fopen(newNameINTERLACED(ii),'w');
-                fileLock = 0;
-            else
-                fileLock = 1;
-            end
         else
+            opt.interlaceCh = 0;
+            dataChL = length(dataCh);
             if opt.overwriteFiles || ~isfile(newName(ii))
                 fileID = fopen(newName(ii),'w');
                 fileLock = 0;
@@ -116,16 +120,16 @@ if ~isempty(dataCh)
             end
         end
         
-        if opt.subtract50
-            if opt.interlaceCh
-                if isAnInteger(length(dataCh)/2)
-                    for jj=1:length(dataCh)/2
-                        tempData(jj,:) = int16(double(tempData(jj,:))-lowpass(double(tempData(jj,:)),100,opt.subtract50*length(dataCh)/2,'Steepness',0.99));
-                    end
+        if opt.filt
+            if strcmpi(opt.mode, 'lowpass')
+                for jj=1:dataChL
+                    tempData(jj,:) = int16(double(tempData(jj,:))-...
+                        lowpass(double(tempData(jj,:)),opt.cutoff,opt.sRate*(opt.interlaceCh+1),'Steepness',0.99));
                 end
             else
-                for jj=1:length(dataCh)
-                    tempData(jj,:) = int16(double(tempData(jj,:))-lowpass(double(tempData(jj,:)),100,opt.subtract50,'Steepness',0.99));
+                for jj=1:dataChL
+                    tempData(jj,:) = int16(highpass(double(tempData(jj,:)),...
+                        opt.cutoff,opt.sRate*(opt.interlaceCh+1),'Steepness',0.99));
                 end
             end
         end
