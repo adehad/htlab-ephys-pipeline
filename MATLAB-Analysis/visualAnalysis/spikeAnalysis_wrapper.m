@@ -8,7 +8,7 @@ addpath(genpath('K:\MATLAB\altmany-export_fig-26eb699'))
 uiopen('*_visual.mat');
 
 %% SECTION 1: Options
-opt.preName = '06'; % first part of name of saved figures
+opt.preName = '07'; % first part of name of saved figures
 opt.tsdnLatency = 0; % latency of tsdns in ms
 selectUnits = [0 3]%'all'; % array of units to plot {'all [X,Y,Z]}
 
