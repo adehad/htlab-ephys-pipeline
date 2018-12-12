@@ -1,5 +1,4 @@
-function OEtoBin(pathToDataFolder,dataFolderNames,overwriteFiles, ...
-    dataCh,adcCh,nChDesired,interlaceCh,invertCh,mergeCh)
+function OEtoBin(pathToDataFolder,dataFolderNames,dataCh,adcCh,nChDesired,opt)
 %% Saves OPEN-EPHYS Data as Binary & Interlaces, Adds Dummy channels, Saves ADC
 % Last Updated: 11/11/2018
 %
@@ -15,9 +14,9 @@ function OEtoBin(pathToDataFolder,dataFolderNames,overwriteFiles, ...
 %                                                  leave empty if none)
 %       nChDesired      (if greater than length(dataChan) will pad with
 %                          dummy channels of 1s)
-%       interlaceCh     (if you want to interlace channel data)
-%       invertCh        (1 if you want to invert)
-%       mergeCh         (1 if you want merged data output)
+%       opt.interlaceCh     (if you want to interlace channel data)
+%       opt.invertCh        (1 if you want to invert)
+%       opt.mergeCh         (1 if you want merged data output)
 %
 % OUTPUT:                 Stored in the same folder as dataFolderNames
 %      dataFolderName.bin (will groups channels to a single binary file)
@@ -44,7 +43,7 @@ if strcmpi(dataFolderNames, 'all')
     else
         filesInPath = dir;
     end
-    folderFlags = [filesInPath.isdir] & ~strcmp({filesInPath.name},'.') & ~strcmp({filesInPath.name},'..');
+    folderFlags = [filesInPath.isdir] & ~strncmp({filesInPath.name},'.',1);
     dataFolders = filesInPath(folderFlags);
     dataFolderNames = char2str({dataFolders.name})';
 end
@@ -90,7 +89,7 @@ if ~isempty(dataCh)
         tempData = int16(tempData);
         
         % interlacing, if the option was enabled
-        if interlaceCh
+        if opt.interlaceCh
             if isAnInteger(length(dataCh)/2) % is it an integer
                 tempData = zeros(length(dataCh)/2, size(tempData,2)*2 );
                 for kk=1:length(dataCh)/2
@@ -102,14 +101,14 @@ if ~isempty(dataCh)
                     'interlace. Skipping interlacing...'])
             end
             
-            if overwriteFiles || ~isfile(newNameINTERLACED(ii))
+            if opt.overwriteFiles || ~isfile(newNameINTERLACED(ii))
                 fileID = fopen(newNameINTERLACED(ii),'w');
                 fileLock = 0;
             else
                 fileLock = 1;
             end
         else
-            if overwriteFiles || ~isfile(newName(ii))
+            if opt.overwriteFiles || ~isfile(newName(ii))
                 fileID = fopen(newName(ii),'w');
                 fileLock = 0;
             else
@@ -117,9 +116,23 @@ if ~isempty(dataCh)
             end
         end
         
+        if opt.subtract50
+            if opt.interlaceCh
+                if isAnInteger(length(dataCh)/2)
+                    for jj=1:length(dataCh)/2
+                        tempData(jj,:) = int16(double(tempData(jj,:))-lowpass(double(tempData(jj,:)),100,opt.subtract50*length(dataCh)/2,'Steepness',0.99));
+                    end
+                end
+            else
+                for jj=1:length(dataCh)
+                    tempData(jj,:) = int16(double(tempData(jj,:))-lowpass(double(tempData(jj,:)),100,opt.subtract50,'Steepness',0.99));
+                end
+            end
+        end
+        
         % create new split data .bin file
         formattedData = ones(nChDesired,length(tempData),'int16');
-        formattedData(1:size(tempData,1),:) = tempData*(-1)^invertCh;
+        formattedData(1:size(tempData,1),:) = tempData*(-1)^opt.invertCh;
         formattedData = int16(formattedData);
 
         % save new split data .bin file, check for overwrites
@@ -134,14 +147,14 @@ if ~isempty(dataCh)
         end
         
         % save merged data, check for overwrites
-        if mergeCh
+        if opt.mergeCh
             % get size of each split
             fileSizeList(ii) = length(formattedData);
             
             if ~mergeLock
                 fileID = fopen(newNameMERGED,'a');
             elseif isfile(newNameMERGED)
-                if overwriteFiles
+                if opt.overwriteFiles
                     fileID = fopen(newNameMERGED,'w');
                     mergeLock = 0;
                 else
@@ -171,7 +184,7 @@ if ~isempty(dataCh)
         formatSpec = '%s, is ,%.0f, samples long\n';
         fprintf(fileID,formatSpec,[namePart1'; string(fileSizeList)]);
         fclose(fileID);
-    elseif mergeCh
+    elseif opt.mergeCh
         warning('File exists and will not be overwritten');
     end
 else
@@ -204,7 +217,7 @@ if ~isempty(adcCh)
         formattedADC = int16(formattedADC);
 
         % save new adc .bin file and timestamps, check for overwrites
-        if overwriteFiles || ~isfile(newNameADC(ii))
+        if opt.overwriteFiles || ~isfile(newNameADC(ii))
             fileID = fopen(newNameADC(ii),'w');
             fileLock = 0;
         else

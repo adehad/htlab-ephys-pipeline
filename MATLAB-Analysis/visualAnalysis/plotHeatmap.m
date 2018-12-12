@@ -144,6 +144,7 @@ for ii = selectUnits
 %                     num2str(uniqueLowerEdges(jj,1)), '_', num2str(uniqueLowerEdges(jj,2))], 'epsc');
 %             end
         end
+        set(gca,'FontSize',24)
         hold off
         % save figures
         if saveFig == 2
