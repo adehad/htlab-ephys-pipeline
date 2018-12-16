@@ -77,7 +77,6 @@ if ~isempty(dataCh)
         fileID = fopen(dataNames(ii));
         tempData = fread(fileID,[dataCh, Inf], 'int16','l'); % little endian open
         tempData = int16(tempData);
-        tempData = reshape(tempData,dataCh,[]);
         fclose(fileID);
         
         % interlacing, if the option was enabled
@@ -178,8 +177,11 @@ if ~isempty(dataCh)
     % save merging metadata, check for overwrites
     if ~mergeLock
         fileID = fopen(newNameMETA,'w');
-        formatSpec = '%s, is ,%.0f, samples long\n';
-        fprintf(fileID,formatSpec,[namePart1'; string(fileSizeList)]);
+        formatSpec = '%s, is ,%s, samples long\n';
+        printVar = strings(1,2*length(namePart1));
+        printVar(1:2:end) = namePart1;
+        printVar(2:2:end) = num2str(fileSizeList', '%.0f');
+        fprintf(fileID, formatSpec, printVar);
         fclose(fileID);
     elseif opt.mergeCh
         warning('File exists and will not be overwritten');

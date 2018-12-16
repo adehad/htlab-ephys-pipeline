@@ -12,7 +12,7 @@ if ~strcmpi(opt.units, 'pixels') && ~strcmpi(opt.units, 'angle')
     opt.units = 'angle';
 end
 if strcmpi(selectUnits, 'all')
-    selectUnits = s.clusters;
+    selectUnits = 1:length(s.clusters);
 end
 
 % get bottom and left edges of each heat map bin
@@ -32,7 +32,7 @@ sizeMod = opt.sqSize/5; % controls sizes of arrows
 
 %% heat map
 for ii = selectUnits
-    singleUnit = double(s.(sprintf('unit_%02i',ii))); % get sing unit spikes
+    singleUnit = double(s.(sprintf('unit_%s',s.clusters(ii)))); % get sing unit spikes
     if ~isempty(singleUnit)
         % get spikes for full experiment
         singleUnit = singleUnit(m.pd(1) <= singleUnit & singleUnit <= m.pd(stim.repeatIndex(end)));
@@ -73,7 +73,6 @@ for ii = selectUnits
         %histogram2(spikePos(:,1),spikePos(:,2),Xedges,Yedges, ...
         %    'DisplayStyle','tile','ShowEmptyBins','on');
         [histVal, histC] = hist3(spikePos, 'Edges', {Xedges Yedges});
-        sum(spikePos>60)
         histVal = histVal/stim.StimGL_nloops;
 %         [N2,c2] = hist3([[xyTrajTrue(leftToRight,1);0;max(xyTrajTrue(:,1))], ...   % Trajectoriess Histogram - i.e. how often is the trajectory in the same bin as we used for spikes
 %                  [xyTrajTrue(leftToRight,2);0;max(xyTrajTrue(:,2))]], ...
@@ -86,7 +85,7 @@ for ii = selectUnits
         axis xy % ensure y axis points up
         colorbar
         set(gcf,'color','w');
-        title(sprintf('unit\\_%02i',ii))
+        title(sprintf('unit\\_%s',s.clusters(ii)))
         xlabel('azimuth (°)'); ylabel('elevation (°)');
         colormap hot; c = colorbar; c.Label.String = 'Spike count per trial';
         axis equal tight
@@ -148,15 +147,15 @@ for ii = selectUnits
         hold off
         % save figures
         if saveFig == 2
-            export_fig(sprintf('%s_heatmap_unit_%s_post.eps',opt.preName,num2str(ii)))
-            saveas(gcf, [opt.preName '_heatmap_unit_' num2str(ii) '_post'], 'fig');
+            export_fig(sprintf('%s_heatmap_unit_%s_post.eps',opt.preName,s.clusters(ii)))
+            saveas(gcf, [opt.preName '_heatmap_unit_' s.clusters(ii) '_post'], 'fig');
         elseif saveFig
-            saveas(gcf, [opt.preName '_heatmap_unit_' num2str(ii) '_post'], 'epsc');
-            saveas(gcf, [opt.preName '_heatmap_unit_' num2str(ii) '_post'], 'fig');
+            saveas(gcf, [opt.preName '_heatmap_unit_' s.clusters(ii) '_post'], 'epsc');
+            saveas(gcf, [opt.preName '_heatmap_unit_' s.clusters(ii) '_post'], 'fig');
         end
         
     else
-        warning(['Unit ' num2str(ii) ' has no spikes. A heatmap will not be plotted...']);
+        warning(['Unit ' s.clusters(ii) ' has no spikes. A heatmap will not be plotted...']);
     end
 end
 end

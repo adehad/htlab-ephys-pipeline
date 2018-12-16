@@ -16,7 +16,7 @@ if ~strcmp(reqFuncStr,'')
 end
 
 if strcmpi(selectUnits, 'all')
-    selectUnits = s.clusters;
+    selectUnits = 1:length(s.clusters);
 end
 
 stimLength = stim.stimLength;
@@ -24,21 +24,21 @@ maxStimLength = max(stimLength);
 nLoops = stim.StimGL_nloops;
 %% spike raster
 for ii = selectUnits
-    if ~isempty(s.(sprintf('unit_%02i',ii)))
+    if ~isempty(s.(sprintf('unit_%s',s.clusters(ii))))
         spikeLocations = [];
         
         % get indices of spikes relative to repeatIndex starts and store in
         % a cell array for spike raster and a vector for spike histogram
         for jj=1:nLoops
             %nextTrialShift = s.units{ii} - m.pd(stim.repeatIndex(jj) + 1);
-            nextTrialShift = double(s.(sprintf('unit_%02i',ii))) - m.pd(stim.repeatIndex(jj) + 1);
+            nextTrialShift = double(s.(sprintf('unit_%s',s.clusters(ii)))) - m.pd(stim.repeatIndex(jj) + 1);
             nextSpikeTrain = nextTrialShift(nextTrialShift>=0 & nextTrialShift<=stimLength(jj));
             spikeTrain{jj} = nextSpikeTrain;
             spikeLocations = [spikeLocations; nextSpikeTrain];
         end
         
         figure
-        title(sprintf('unit\\_%02i',ii))
+        title(sprintf('unit\\_%s',s.clusters(ii)))
         set(gcf,'color','w');
         
         % plot trajectory angles throughout the experiment, removing points
@@ -71,13 +71,13 @@ for ii = selectUnits
         
         if saveFig == 2
             export_fig(sprintf('%s_raster_unit_%s.eps',opt.preName,num2str(ii)))
-            saveas(gcf, [opt.preName '_raster_unit_' num2str(ii)], 'fig');
+            saveas(gcf, [opt.preName '_raster_unit_' s.clusters(ii)], 'fig');
         elseif saveFig
-            saveas(gcf, [opt.preName '_raster_unit_' num2str(ii)], 'epsc');
-            saveas(gcf, [opt.preName '_raster_unit_' num2str(ii)], 'fig');
+            saveas(gcf, [opt.preName '_raster_unit_' s.clusters(ii)], 'epsc');
+            saveas(gcf, [opt.preName '_raster_unit_' s.clusters(ii)], 'fig');
         end
     else
-        warning(['Unit ' num2str(ii) ' has no spikes. A raster will not be plotted...']);
+        warning(['Unit ' s.clusters(ii) ' has no spikes. A raster will not be plotted...']);
     end
 end
 end

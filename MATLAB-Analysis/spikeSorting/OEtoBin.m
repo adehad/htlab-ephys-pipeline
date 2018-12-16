@@ -57,8 +57,8 @@ newName             = dataFolderNames + namePart1 + '_padded' + namePart2;
 newNameINTERLACED   = dataFolderNames + namePart1 + '_interlaced' + namePart2;
 newNameADC          = dataFolderNames + namePart1 + '_ADC' + namePart2;
 newNameTS           = dataFolderNames + namePart1 + '_timestamps.mat';
-newNameMERGED       = ['data_merged', namePart2];
-newNameMETA         = 'merge_info.csv';
+newNameMERGED       = [opt.mergePrename '_data_merged', namePart2];
+newNameMETA         = [opt.mergePrename '_merge_info.csv'];
 
 % if user is specifying a path to the data folder - i.e. not current folder
 if ~isempty(pathToDataFolder)
@@ -185,8 +185,11 @@ if ~isempty(dataCh)
     % save merging metadata, check for overwrites
     if ~mergeLock
         fileID = fopen(newNameMETA,'w');
-        formatSpec = '%s, is ,%.0f, samples long\n';
-        fprintf(fileID,formatSpec,[namePart1'; string(fileSizeList)]);
+        formatSpec = '%s, is ,%s, samples long\n';
+        printVar = strings(1,2*length(namePart1));
+        printVar(1:2:end) = namePart1;
+        printVar(2:2:end) = num2str(fileSizeList', '%.0f');
+        fprintf(fileID, formatSpec, printVar);
         fclose(fileID);
     elseif opt.mergeCh
         warning('File exists and will not be overwritten');
@@ -244,6 +247,8 @@ if ~isempty(adcCh)
 else
     warning('Empty adcCh')
 end
+
+disp('OE data converted to .bin successfully!')
 end
 
 %%%% OPEN EPHYS DATA LOAD FUNCTION

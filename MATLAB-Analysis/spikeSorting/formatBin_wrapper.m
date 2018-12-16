@@ -1,18 +1,18 @@
 % FOLDERS/FILES WITH '.' AT THE START OF THEIR NAME WILL BE IGNORED WHEN
 % USING 'all'
-addpath(genpath('E:\GitHub\htlab-ephys-pipeline\MATLAB-Analysis\spikeSorting'))
+addpath(genpath('C:\Users\Daniel\Documents\GitHub\htlab-ephys-pipeline'))
 
 %% Converting Open-Ephs Data (organised in folders) to Binary Files needed for Spike Sorting
 
 % Folder separator: Windows = '\' Linux = '/'
     pathToDataFolder    = 'K:\Ephys\181207\1';   % If script already can reach dataFolder, set to ''
-    dataFolderNames     = 'all';% String array (DOUBLE QUOTES) such as ["181108",...] OR 'all' 
-    opt.overwriteFiles      = 0;    % 1 = overwrite, 0 = do not overwrite
+    dataFolderNames     = ["2018-12-07_19-26-39" "2018-12-07_21-10-33" "2018-12-07_22-16-17"];%'all';% String array (DOUBLE QUOTES) such as ["181108",...] OR 'all' 
+    opt.overwriteFiles      = 1;    % 1 = overwrite, 0 = do not overwrite
     
 % Data Channel(s) - 100_CH<>.continuous files
     dataCh              = 17;  % Array
 % PhotoDiode Channel - 100_ADC<>.continuous files
-    adcCh               = 1;    % Array
+    adcCh               = [];    % Array
     
 % Output parameters
     nChDesired          = 4;    % Number of signal channels needed
@@ -25,6 +25,7 @@ addpath(genpath('E:\GitHub\htlab-ephys-pipeline\MATLAB-Analysis\spikeSorting'))
                                 % elements in dataChan array
     opt.invertCh        = 0;    % 1 = invert, 0 = do not invert
     opt.mergeCh         = 1;    % 1 = merge data, 0 = do not merge data
+    opt.mergePrename    = '07_08_09_filtered'; 
     
 % Filter output
     opt.filt = 1;           %{0 1}

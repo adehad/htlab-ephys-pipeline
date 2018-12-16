@@ -6,7 +6,7 @@ end
 
 %%
 for ii = selectUnits
-    singleUnit = double(s.(sprintf('unit_%02i',ii))); % get sing unit spikes
+    singleUnit = double(s.(sprintf('unit_%s',s.clusters(ii)))); % get sing unit spikes
     if ~isempty(singleUnit)
         % get spikes for full experiment
         singleUnit = singleUnit(m.pd(1) <= singleUnit & singleUnit <= m.pd(stim.repeatIndex(end)));
@@ -71,21 +71,21 @@ for ii = selectUnits
             set(gcf,'color','w');
             surf(X,Y,Z);
             colorbar
-            title(sprintf('unit\\_%02i',ii))
+            title(sprintf('unit\\_%s',s.clusters(ii)))
             
             % save figures
             if saveFig == 2
                 export_fig(sprintf('%s_orientationTopo_unit_%s.eps',opt.preName,num2str(ii)))
-                saveas(gcf, [opt.preName '_orientationTopo_unit_' num2str(ii)], 'fig');
+                saveas(gcf, [opt.preName '_orientationTopo_unit_' s.clusters(ii)], 'fig');
             elseif saveFig
-                saveas(gcf, [opt.preName '_orientationTopo_unit_' num2str(ii)], 'epsc');
-                saveas(gcf, [opt.preName '_orientationTopo_unit_' num2str(ii)], 'fig');
+                saveas(gcf, [opt.preName '_orientationTopo_unit_' s.clusters(ii)], 'epsc');
+                saveas(gcf, [opt.preName '_orientationTopo_unit_' s.clusters(ii)], 'fig');
             end
         else
-            warning(['Unit ' num2str(ii) ' has only one filled bin. Topography will not be plotted...']);
+            warning(['Unit ' s.clusters(ii) ' has only one filled bin. Topography will not be plotted...']);
         end
     else
-        warning(['Unit ' num2str(ii) ' has no spikes. A heatmap will not be plotted...']);
+        warning(['Unit ' s.clusters(ii) ' has no spikes. A heatmap will not be plotted...']);
     end
 end
 end

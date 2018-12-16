@@ -1,14 +1,16 @@
 %% Wrapper File for Extracting Information from Binary files & Sorting Program Outputs
 % Use Ctrl+Enter (Windows) to run section by section
-%% Add Functions to Path
-addpath(genpath('E:\GitHub\htlab-ephys-pipeline\MATLAB-Analysis\spikeSorting')) % Path to spikeSorting folder of git
+
+%% Add functions to path
+addpath(genpath('C:\Users\Daniel\Documents\GitHub\htlab-ephys-pipeline\MATLAB-Analysis\spikeSorting')) % Path to spikeSorting folder of git
+
 %% SECTION 1: Extracts spike times to _sortedmat
 sortedType = 'kilosort';            
-sortOutputFolder = 'K:\Ephys\181207\1\preAutoMerge';
-file = '181207';
+sortOutputFolder = 'K:\Ephys\181207\1\.07_08\preAutoMerge';
+file = '181207_78';
 startTrial = 1;
-mergedInfoCSV = 'K:\Ephys\181207\1\merge_info.csv';
-clusterType = "unsorted"; % good, unsorted, noise or [] (empty) (when there has been no manual sorting, there's only unsorted). 
+mergedInfoCSV = 'K:\Ephys\181207\1\.07_08\07_08_filtered_merge_info.csv';
+clusterType = []; % good, unsorted, noise or [] (empty) (when there has been no manual sorting, there's only unsorted). 
                           % Arrays accepted e.g. ["good";"unsorted";"MUA"]
 filename.sortOutputAll = extractTrialUnits(sortedType,...           % sorting Program used
                                        sortOutputFolder, ...    % location of sorting output
@@ -48,13 +50,13 @@ m.dbytes    = 2; % byte size of data - i.e. int16 is 2 bytes
 m.msec      = m.sRateHz/1000; % conversion factor from ms time to sample number
 
 %% SECTION 3: Extract Waveforms
-m.nChans    = 1;            % number of channels
+m.nChans    = 4;            % number of channels
 m.ech       = 1; % ephys channel(s) is everything except the last
 
 [m,s] = extractTrialUnitWaves(filename.binary, ... % Binary File
                       filename.sortOutput, ...  % _sorted.mat file
                       m, ...                    % metafile struct, m
-                      0, ...                    % 1: if you want to do secondary template matching
+                      1, ...                    % 1: if you want to do secondary template matching
                       []);              % filename to store output, leave as [] if you don't want to save
                                                            
 %% SECTION 4: Saves Output for a given filename.sortOutput
