@@ -1,4 +1,4 @@
-function spikeTrain = plotRaster(m, s, stim, selectUnits, opt, saveFig)
+function [] = plotRaster(m, s, stim, selectUnits, opt, saveFig)
 %%%% getRaster
 %%%% A. Haddad, D. Ko, H. Lin
 %%%% INPUT:
@@ -21,22 +21,25 @@ end
 
 stimLength = stim.stimLength;
 maxStimLength = max(stimLength);
-nLoops = length(stim.stimLength);
+nLoops = length(stim.repeatIndex);
 %% spike raster
 for ii = selectUnits
-    singleUnit = double(s.(sprintf('unit_%s',s.clusters(ii))));
-    if ~isempty(singleUnit)
-        spikeStack = [];
-        
+    if ~isempty(s.(sprintf('unit_%s',s.clusters(ii))))
+        spikeLocations = [];
+        T = [];
         % get indices of spikes relative to repeatIndex starts and store in
         % a cell array for spike raster and a vector for spike histogram
         for jj=1:nLoops
             %nextTrialShift = s.units{ii} - m.pd(stim.repeatIndex(jj) + 1);
-            tempShift = singleUnit - m.pd(stim.repeatIndex(jj) + 1);
-            relSpikes = tempShift(tempShift>=0 & tempShift<=stimLength(jj));
-            spikeTrain{jj} = relSpikes;
-            spikeStack = [spikeStack; relSpikes];
+            rMask=zeros(1,stimLength(jj));
+            temp = double(s.(sprintf('unit_%s',s.clusters(ii)))) - m.pd(stim.repeatIndex(jj) + 1);
+            tempInd = find(temp>=0 & temp<=stimLength(jj));
+            rMask(temp(tempInd))=ones(1,size(tempInd,2));
+            spikeLocations = [spikeLocations; temp(tempInd)];
+            T = [T rMask];
         end
+        TE = find(T == 1);
+        
         figure
         set(gcf,'color','w');
         
@@ -54,20 +57,20 @@ for ii = selectUnits
         
         % plot spike raster
         axCellList{1} = subplot(10,1,3:8);
-        rasterplotv2(spikeTrain,maxStimLength,gca,m.sRateHz*1000);
+        rasterplot(TE,nLoops,maxStimLength,gca,m.sRateHz*1000);
         title(sprintf('unit\\_%s',s.clusters(ii)))
         
         % plot smoothed and upsampled spike histogram - TO DO: MAKE IT NOT
         % GO NEGATIVE
         axCellList{2} = subplot(10,1,9:10);
-        [nEle,centers]=hist(spikeStack,0:m.sRateHz*opt.rasterBinSize/1000:maxStimLength);
+        [nEle,centers]=hist(spikeLocations,0:m.sRateHz*opt.rasterBinSize/1000:maxStimLength);
         %spikeHis=csaps(centers,nelements,0.5,1:maxStimLength);
         plot(centers/m.sRateHz, 10*(nEle/nLoops))
         xlim([0 maxStimLength/m.sRateHz])
         xlabel('Time (s)')
         ylabel('Mean spike rate (Hz)')
         
-        %adjustLims(axCellList)
+        adjustLims(axCellList)
         
         if saveFig == 2
             export_fig(sprintf('%s_raster_unit_%s.eps',opt.preName,num2str(ii)))

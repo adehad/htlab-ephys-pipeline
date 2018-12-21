@@ -49,10 +49,10 @@ for ii = selectUnits
         
         if saveFig == 2
             export_fig(sprintf('%s_polar_unit_%s.eps',opt.preName,num2str(ii)))
-            saveas(gcf, [opt.preName '_polar_unit_' s.clusters(ii)], 'fig');
+            saveas(gcf, join([opt.preName '_polar_unit_' s.clusters(ii)],''), 'fig');
         elseif saveFig
-            saveas(gcf, [opt.preName '_polar_unit_' s.clusters(ii)], 'epsc');
-            saveas(gcf, [opt.preName '_polar_unit_' s.clusters(ii)], 'fig');
+            saveas(gcf, join([opt.preName '_polar_unit_' s.clusters(ii)],''), 'epsc');
+            saveas(gcf, join([opt.preName '_polar_unit_' s.clusters(ii)],''), 'fig');
         end
     else
         warning(['Unit ' s.clusters(ii) ' has no spikes. A heatmap will not be plotted...']);

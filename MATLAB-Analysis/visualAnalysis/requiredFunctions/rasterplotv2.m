@@ -69,7 +69,7 @@ yy(2:3:3*numspikes)=yy(1:3:3*numspikes)+1;
 %scale the time axis to ms
 xx(1:3:3*numspikes)=reltimes*1000/fs;
 xx(2:3:3*numspikes)=reltimes*1000/fs;
-xlim=[1,triallen*1000/fs];
+xlim=[0,triallen*1000/fs];
 
 axes(hresp);
 h=plot(xx, yy, plotcolor, 'linewidth',plotwidth);

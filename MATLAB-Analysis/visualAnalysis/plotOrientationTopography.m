@@ -76,10 +76,10 @@ for ii = selectUnits
             % save figures
             if saveFig == 2
                 export_fig(sprintf('%s_orientationTopo_unit_%s.eps',opt.preName,num2str(ii)))
-                saveas(gcf, [opt.preName '_orientationTopo_unit_' s.clusters(ii)], 'fig');
+                saveas(gcf, join([opt.preName '_orientationTopo_unit_' s.clusters(ii)],''), 'fig');
             elseif saveFig
-                saveas(gcf, [opt.preName '_orientationTopo_unit_' s.clusters(ii)], 'epsc');
-                saveas(gcf, [opt.preName '_orientationTopo_unit_' s.clusters(ii)], 'fig');
+                saveas(gcf, join([opt.preName '_orientationTopo_unit_' s.clusters(ii)],''), 'epsc');
+                saveas(gcf, join([opt.preName '_orientationTopo_unit_' s.clusters(ii)],''), 'fig');
             end
         else
             warning(['Unit ' s.clusters(ii) ' has only one filled bin. Topography will not be plotted...']);

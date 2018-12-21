@@ -1,4 +1,4 @@
-function [] = plotHeatmap(m, s, stim, selectUnits, opt, saveFig)
+function histVal = plotHeatmap(m, s, stim, selectUnits, opt, saveFig)
 %% set up some variables
 
 %TODO: SCALE MEAN ARROWS
@@ -17,36 +17,38 @@ end
 
 % get bottom and left edges of each heat map bin
 if strcmpi(opt.units, 'pixels')
-    Xedges = floor(min(stim.stimPos(:,1)-1)/opt.sqSize)*opt.sqSize:opt.sqSize:...
-        ceil(max(stim.stimPos(:,1)+1)/opt.sqSize)*opt.sqSize;
-    Yedges = floor(min(stim.stimPos(:,2)-1)/opt.sqSize)*opt.sqSize:opt.sqSize:...
-        ceil(max(stim.stimPos(:,2)+1)/opt.sqSize)*opt.sqSize;
+    pos = stim.stimPos;
 else
-    Xedges = floor(min(stim.angleStimPos(:,1))/opt.sqSize)*opt.sqSize:opt.sqSize:...
-        ceil(max(stim.angleStimPos(:,1))/opt.sqSize)*opt.sqSize;
-    Yedges = floor(min(stim.angleStimPos(:,2))/opt.sqSize)*opt.sqSize:opt.sqSize:...
-        ceil(max(stim.angleStimPos(:,2))/opt.sqSize)*opt.sqSize;
+    pos = stim.angleStimPos;
 end
+
+xE = opt.sqSize*(floor(min(pos(:,1))/opt.sqSize):ceil(max(pos(:,1))/opt.sqSize));
+yE = opt.sqSize*(floor(min(pos(:,2))/opt.sqSize):ceil(max(pos(:,2))/opt.sqSize));
+if opt.halfOffset
+    %xE = [xE - opt.sqSize/2, xE(end) + opt.sqSize/2];
+    yE = [yE - opt.sqSize/2, yE(end) + opt.sqSize/2];
+end
+xC = xE(1:end-1)+opt.sqSize/2;
+yC = yE(1:end-1)+opt.sqSize/2;
 
 sizeMod = opt.sqSize/5; % controls sizes of arrows
 
 %% heat map
 for ii = selectUnits
     singleUnit = double(s.(sprintf('unit_%s',s.clusters(ii)))); % get sing unit spikes
+    clear sqC sqMean
     if ~isempty(singleUnit)
         % get spikes for full experiment
         singleUnit = singleUnit(m.pd(1) <= singleUnit & singleUnit <= m.pd(stim.repeatIndex(end)));
         
-        % shift m.pd by the times of each spike to find out the last pd
+        % shift m.pd by the times of each spike to find out the index of last pd
         % event before the spike occurs. Introduce dragonfly neural latency
         % if wanted
-        lastFrameIdx = ones(length(singleUnit) + 1,1);
+        lastFrameIdx = ones(size(singleUnit));
         for kk = 1:length(singleUnit)
-            shiftedPD = m.pd(lastFrameIdx(kk):end) - singleUnit(kk);
-            shiftedPD = shiftedPD(shiftedPD <= 0);
-            lastFrameIdx(kk+1) = length(shiftedPD) + opt.tsdnLatency;
+            shiftedPD = m.pd - singleUnit(kk);
+            lastFrameIdx(kk) = length(shiftedPD(shiftedPD <= 0)) + opt.tsdnLatency*m.sRateHz/1000;
         end
-        lastFrameIdx(1) = [];
         
         % discard data in the corner of the screen where the target goes to
         % when the trajectory goes out of bounds, if wanted
@@ -70,90 +72,76 @@ for ii = selectUnits
         
         % plot histogram of spike positions
         figure
-        %histogram2(spikePos(:,1),spikePos(:,2),Xedges,Yedges, ...
-        %    'DisplayStyle','tile','ShowEmptyBins','on');
-        [histVal, histC] = hist3(spikePos, 'Edges', {Xedges Yedges});
-        histVal = histVal/stim.StimGL_nloops;
-%         [N2,c2] = hist3([[xyTrajTrue(leftToRight,1);0;max(xyTrajTrue(:,1))], ...   % Trajectoriess Histogram - i.e. how often is the trajectory in the same bin as we used for spikes
-%                  [xyTrajTrue(leftToRight,2);0;max(xyTrajTrue(:,2))]], ...
-%                  numBins); N2(1,1)=N2(1,1)-1; N2(end,end) = N2(end,end)-1; % subtract elements we added
-%           if gaussianSigma<=0
-        imagesc(histC{1},histC{2},histVal');     % c - pixel centres, N - pixel values (NOTE: TRANSPOSE)
-%           else
-%         imagesc(c{1}([1 end]),c{2}([1 end]),imgaussfilt(histVal',gaussianSigma));
-%           end            
+        [histVal] = histcounts2(spikePos(:,1),spikePos(:,2),xE, yE);
+        modHistVal = histVal/length(stim.stimLength);
+
+        imagesc(xC,yC,modHistVal');
         axis xy % ensure y axis points up
         colorbar
         set(gcf,'color','w');
+        set(gcf,'renderer','Painters');
         title(sprintf('unit\\_%s',s.clusters(ii)))
         xlabel('azimuth (°)'); ylabel('elevation (°)');
         colormap hot; c = colorbar; c.Label.String = 'Spike count per trial';
         axis equal tight
         
-%         if saveFig
-%             saveas(gcf, [opt.preName '_heatmap_unit_' num2str(ii) '_pre'], 'epsc');
-%         end
-        
         % find the nearest bottom and left bin edge from each spike
-        lowerEdges = floor(spikePos/opt.sqSize)*opt.sqSize;
-        uniqueLowerEdges = unique(lowerEdges,'rows');
+        lowerE(:,1) = interp1(xE,xE,spikePos(:,1),'previous');
+        lowerE(:,2) = interp1(yE,yE,spikePos(:,2),'previous');
+        uniqueLE = unique(lowerE,'rows');
         
         % group spikes within same bins and find their orientation angle
-        for jj = 1:size(uniqueLowerEdges,1)
-            sqIndex = ismember(lowerEdges,uniqueLowerEdges(jj,:),'rows');
-            sqMiddle = uniqueLowerEdges(jj,:) + opt.sqSize/2;
+        for jj = 1:size(uniqueLE,1)
+            sqInd = ismember(lowerE,uniqueLE(jj,:),'rows');
+            sqC(jj,:) = uniqueLE(jj,:) + opt.sqSize/2;
+            sqNormVel = spikeVel(sqInd,:)./vecnorm(spikeVel(sqInd,:),2,2);
             
             if strcmpi(opt.drawingMode, 'arrows')
                 hold on
                 % draw small arrows from the centre of each bin for each
                 % trajectory angle
-                quiver(ones(size(find(sqIndex)))*sqMiddle(1), ones(size(find(sqIndex)))*sqMiddle(2), ...
-                    2*spikeVel(sqIndex,1)./vecnorm(spikeVel(sqIndex,:),2,2), ...
-                    2*spikeVel(sqIndex,2)./vecnorm(spikeVel(sqIndex,:),2,2), ...
+                quiver(ones(size(sqNormVel))*sqC(jj,1), ones(size(sqNormVel))*sqC(jj,2), ...
+                    sizeMod*sqNormVel(:,1), sizeMod*sqNormVel(:,2), ...
                     'color', 'g', 'ShowArrowHead', 'off', 'AutoScale', 'off');
             elseif strcmpi(opt.drawingMode, 'blob')
                 hold on
                 % draw a blob in the centre of each bin that has variable
                 % radius proportional to prevalence of trajectory angle
                 blobVertex = [];
-                spikeVecAngles = atan2d(spikeVel(sqIndex,2),spikeVel(sqIndex,1));
+                spikeVecAngles = atan2d(spikeVel(sqInd,2),spikeVel(sqInd,1));
                 leftRegion = find(spikeVecAngles < -172.5 | spikeVecAngles > 172.5);
-                angleEdges = -172.5:15:172.5;
-                angleMiddles = -165:15:180;
+                angleE = -172.5:15:172.5;
+                angleM = -165:15:180;
                 
-                angleHist = histcounts(spikeVecAngles,angleEdges);
-                normHistVals = [angleHist length(leftRegion)];
-                normHistVals = sizeMod*((normHistVals)/max(normHistVals) + 0.2);
+                angleHV = histcounts(spikeVecAngles,angleE);
+                normHV = [angleHV length(leftRegion)];
+                normHV = sizeMod*((normHV)/max(normHV) + 0.2);
                 
-                blobVertex(1,:) = normHistVals.*cosd(angleMiddles) + sqMiddle(1);
-                blobVertex(2,:) = normHistVals.*sind(angleMiddles) + sqMiddle(2);
+                blobVertex(1,:) = normHV.*cosd(angleM) + sqC(jj,1);
+                blobVertex(2,:) = normHV.*sind(angleM) + sqC(jj,2);
                 blobVertex = [blobVertex blobVertex(:,1)];
                 patch(blobVertex(1,:), blobVertex(2,:), 'g', 'EdgeColor', 'g');
             end
             
             % draw the big mean directional arrow of each bin
             hold on
-            meanVec = mean(spikeVel(sqIndex,:),1,'omitnan');
-            quiver(sqMiddle(1), sqMiddle(2), 2*sizeMod*meanVec(1)/norm(meanVec), ...
-                2*sizeMod*meanVec(2)/norm(meanVec), ...
-                'color', 'c', 'MaxHeadSize', 7, 'AutoScale', 'off');
-            
-%             if saveFig
-%                 saveas(gcf, [opt.preName '_heatmap_unit_', num2str(ii), '_loweredges_', ...
-%                     num2str(uniqueLowerEdges(jj,1)), '_', num2str(uniqueLowerEdges(jj,2))], 'epsc');
-%             end
+            sqMean(jj,:) = mean(sqNormVel,1,'omitnan');
         end
+        
+        quiver(sqC(:,1), sqC(:,2), 2*sizeMod*sqMean(:,1), 2*sizeMod*sqMean(:,2), ...
+                'color', 'c', 'AutoScale', 'off', 'ShowArrowHead', 'off');
+            
         set(gca,'FontSize',24)
         hold off
+        
         % save figures
         if saveFig == 2
             export_fig(sprintf('%s_heatmap_unit_%s_post.eps',opt.preName,s.clusters(ii)))
-            saveas(gcf, [opt.preName '_heatmap_unit_' s.clusters(ii) '_post'], 'fig');
+            saveas(gcf, join([opt.preName '_heatmap_unit_' s.clusters(ii) '_post'],''), 'fig');
         elseif saveFig
-            saveas(gcf, [opt.preName '_heatmap_unit_' s.clusters(ii) '_post'], 'epsc');
-            saveas(gcf, [opt.preName '_heatmap_unit_' s.clusters(ii) '_post'], 'fig');
+            saveas(gcf, join([opt.preName '_heatmap_unit_' s.clusters(ii) '_post'],''), 'epsc');
+            saveas(gcf, join([opt.preName '_heatmap_unit_' s.clusters(ii) '_post'],''), 'fig');
         end
-        
     else
         warning(['Unit ' s.clusters(ii) ' has no spikes. A heatmap will not be plotted...']);
     end

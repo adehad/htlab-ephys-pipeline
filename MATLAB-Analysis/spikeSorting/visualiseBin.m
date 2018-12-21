@@ -1,16 +1,22 @@
 %% get data
-fileName = '07_08_09_filtered_data_merged.bin';
+fileName = '181017_06.bin';
+nCh = 2;
+
 fileID = fopen(fileName);
-data = fread(fileID,[4, Inf], 'int16','l'); % little endian open
+data = fread(fileID,[nCh, Inf], 'int16','l'); % little endian open
 data = int16(data);
 disp('done loading data')
+size(data)
 
 %% non filtered
-cutData = data(1,630000:640000);
+cutData = data(1,763500:764000);
 %cutData = data(108000:115000);
 figure
-plot(cutData,'b')
+%plot(cutData,'b')
 hold on
+
+dataFilt = highpass(double(cutData),300,30000,'Steepness',0.999);
+plot(dataFilt,'color',[0.5 0.5 0.5])
 
 %% filtered
 dataDiscard = lowpass(double(cutData),100,30000,'Steepness',0.999);

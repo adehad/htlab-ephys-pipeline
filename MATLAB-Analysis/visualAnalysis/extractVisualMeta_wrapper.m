@@ -8,7 +8,7 @@ uiopen('*_extracted.mat');
 
 %% SECTION 1: Extract PD data
 % path to photodiode data _ADC.bin file
-filename.rawADC='C:\Users\Daniel\Box Sync\DragonVision_DanielKo\Data\Ephys\181116\2018-11-16_16-23-50\2018-11-16_16-23-50_ADC.bin';
+filename.rawADC=[];%'K:\Ephys\181207\1\2018-12-07_19-26-39\2018-11-16_16-23-50_ADC.bin';
 if isempty(filename.rawADC)
     [fileName, filePath] = uigetfile('*.bin','Select experiment _ADC.bin file:');
     filename.rawADC = [filePath fileName];
@@ -28,22 +28,25 @@ m = extractTrialADC_PD(filename.rawADC, ... % Binary File
 
 %% SECTION 2: Add stimulus and projection data
 % plot interval between pd events so you can choose pdDIffThreshold
-plot(diff(m.pd)); ylim([0 1e4]);
+plot(diff(m.pd)); ylim([0 2e5]);
 
 %% SECTION 2: Add stimulus and projection data
+clear stim
 %%%%%%%%%%%%%%%%%%%%%%% IMPORTANT
-stim.StimGL_nloops = 40;     % number of loops in stimulus
-pdDiffThreshold = 1.5e3;    % threshold of interval between loops
+stim.StimGL_nloops = 16;     % number of loops in stimulus
+pdDiffThreshold = 1500;    % threshold of interval between loops
 %%%%%%%%%%%%%%%%%%%%%%%
 
-stim.D=22.5;                % Distance of the DF head out of the screen in mm
+stim.C=0;
+stim.D=13.5;                % y Distance of DF head from centre of screen in mm
+stim.E=22.5;                % z Distance of the DF head out of the screen in mm
 stim.W=67;                  % Width of the projection in mm
 stim.H=91;                  % Height of the projection in mm
-stim.C=13.5;                % Distance of DF head from centre of screen in mm
+
 stim.xPix = 480;            % xaxis pixel count
 stim.yPix = 640;            % yaxis pixel count
 
 stim = addProj2M(m, stim, pdDiffThreshold);
 
 %% SECTION 3: Save .mat
-save('181116_07_visual.mat', 'm', 's', 'stim', 'filename')
+save('181017_06_visual_pruned.mat', 'm', 's', 'stim', 'filename')

@@ -50,13 +50,13 @@ m.dbytes    = 2; % byte size of data - i.e. int16 is 2 bytes
 m.msec      = m.sRateHz/1000; % conversion factor from ms time to sample number
 
 %% SECTION 3: Extract Waveforms
-m.nChans    = 4;            % number of channels
+m.nChans    = 2;            % number of channels
 m.ech       = 1; % ephys channel(s) is everything except the last
 
 [m,s] = extractTrialUnitWaves(filename.binary, ... % Binary File
                       filename.sortOutput, ...  % _sorted.mat file
                       m, ...                    % metafile struct, m
-                      1, ...                    % 1: if you want to do secondary template matching
+                      0, ...                    % 1: if you want to do secondary template matching
                       []);              % filename to store output, leave as [] if you don't want to save
                                                            
 %% SECTION 4: Saves Output for a given filename.sortOutput
