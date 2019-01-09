@@ -74,15 +74,15 @@ for k = 1:lastblock  % go to the last block
        
     
     % get pd data
-    [pdk,pdrk,pdfk,pwavetmp] = get_events(x,m.pdch,m.pd_f,m.pdwin,m.msec,m.pdthr,0,0);
+    [pdk,pwavetmp] = get_events(x,m.pdch,m.pd_f,m.pdwin,m.msec,m.pdthr,0,0);
     truepd = find((pdk > esize_msec) & (pdk < size(x,2) - esize_msec));
     pwaves = [pwaves; pwavetmp(truepd,:)];
     pd = [pd (pdk(truepd)+(k-1)*(trueblock))];
     
-    truepdr = find((pdrk > esize_msec) & (pdrk < size(x,2) - esize_msec));
-    pdRise = [pdRise (pdrk(truepdr)+(k-1)*(trueblock))];
-    truepdf = find((pdfk > esize_msec) & (pdfk < size(x,2) - esize_msec));
-    pdFall = [pdFall (pdfk(truepdf)+(k-1)*(trueblock))];
+    %truepdr = find((pdrk > esize_msec) & (pdrk < size(x,2) - esize_msec));
+    %pdRise = [pdRise (pdrk(truepdr)+(k-1)*(trueblock))];
+    %truepdf = find((pdfk > esize_msec) & (pdfk < size(x,2) - esize_msec));
+    %pdFall = [pdFall (pdfk(truepdf)+(k-1)*(trueblock))];
     
 
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -144,8 +144,8 @@ disp('-----------------------------------------------------------')
 %% Save PD data to mat file
 
 m.pd = pd;
-m.pdRise = pdRise;
-m.pdFall = pdFall;
+%m.pdRise = pdRise;
+%m.pdFall = pdFall;
 
 %% Save to .mat File
 

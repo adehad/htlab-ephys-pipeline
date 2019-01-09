@@ -1,14 +1,16 @@
 %% Wrapper File for Extracting Information from Binary files & Sorting Program Outputs
 % Use Ctrl+Enter (Windows) to run section by section
-%% Add Functions to Path
+
+%% Add functions to path
 addpath(genpath('C:\Users\Daniel\Documents\GitHub\htlab-ephys-pipeline\MATLAB-Analysis\spikeSorting')) % Path to spikeSorting folder of git
+
 %% SECTION 1: Extracts spike times to _sortedmat
 sortedType = 'kilosort';            
-sortOutputFolder = 'C:\PATH\TO\THE\SORTED\FOLDER\181108\preAutoMerge';
-file = '181108';
+sortOutputFolder = 'K:\Ephys\181207\1\.07_08\preAutoMerge';
+file = '181207_78';
 startTrial = 1;
-mergedInfoCSV = [];
-clusterType = "unsorted"; % good, unsorted, noise or [] (empty) (when there has been no manual sorting, there's only unsorted). 
+mergedInfoCSV = 'K:\Ephys\181207\1\.07_08\07_08_filtered_merge_info.csv';
+clusterType = []; % good, unsorted, noise or [] (empty) (when there has been no manual sorting, there's only unsorted). 
                           % Arrays accepted e.g. ["good";"unsorted";"MUA"]
 filename.sortOutputAll = extractTrialUnits(sortedType,...           % sorting Program used
                                        sortOutputFolder, ...    % location of sorting output
@@ -19,9 +21,10 @@ filename.sortOutputAll = extractTrialUnits(sortedType,...           % sorting Pr
 % Select a single sortOutput
 filename.sortOutput = [sortOutputFolder, filesep, filename.sortOutputAll(1,:)];   
 %% SECTION 2: Establish Metafile struct
-filename.folder = 'C:\Users\Daniel\Box Sync\DragonVision_DanielKo\Data\Ephys\181116\'; 
-filename.binary=[filename.folder, filesep, '2018-11-16_16-23-50\2018-11-16_16-23-50_padded.bin'];
-filename.sortOutput=[filename.folder, filesep, '181116_05_sorted.mat'];
+clear filename
+filename.folder = [];%'K:\Ephys\181207\1'; 
+filename.binary=[];%[filename.folder, filesep, '2018-12-07_17-47-35\2018-12-07_17-47-35_padded.bin'];
+filename.sortOutput=[];%[filename.folder, filesep, '181207_01_sorted.mat'];
 if isempty(filename.binary)
     [fileName, filePath] = uigetfile('*.bin','Select experiment raw binary data .bin file:');
     filename.binary = [filePath filesep fileName];
@@ -47,8 +50,8 @@ m.dbytes    = 2; % byte size of data - i.e. int16 is 2 bytes
 m.msec      = m.sRateHz/1000; % conversion factor from ms time to sample number
 
 %% SECTION 3: Extract Waveforms
-m.nChans    = 4;            % number of channels
-m.ech       = 1:m.nChans-1; % ephys channel(s) is everything except the last
+m.nChans    = 2;            % number of channels
+m.ech       = 1; % ephys channel(s) is everything except the last
 
 [m,s] = extractTrialUnitWaves(filename.binary, ... % Binary File
                       filename.sortOutput, ...  % _sorted.mat file

@@ -1,5 +1,4 @@
-function OEtoBin(pathToDataFolder,dataFolderNames,overwriteFiles, ...
-    dataCh,adcCh,nChDesired,interlaceCh,invertCh,mergeCh)
+function OEtoBin(pathToDataFolder,dataFolderNames,dataCh,adcCh,nChDesired,opt)
 %% Saves OPEN-EPHYS Data as Binary & Interlaces, Adds Dummy channels, Saves ADC
 % Last Updated: 11/11/2018
 %
@@ -15,9 +14,9 @@ function OEtoBin(pathToDataFolder,dataFolderNames,overwriteFiles, ...
 %                                                  leave empty if none)
 %       nChDesired      (if greater than length(dataChan) will pad with
 %                          dummy channels of 1s)
-%       interlaceCh     (if you want to interlace channel data)
-%       invertCh        (1 if you want to invert)
-%       mergeCh         (1 if you want merged data output)
+%       opt.interlaceCh     (if you want to interlace channel data)
+%       opt.invertCh        (1 if you want to invert)
+%       opt.mergeCh         (1 if you want merged data output)
 %
 % OUTPUT:                 Stored in the same folder as dataFolderNames
 %      dataFolderName.bin (will groups channels to a single binary file)
@@ -44,7 +43,7 @@ if strcmpi(dataFolderNames, 'all')
     else
         filesInPath = dir;
     end
-    folderFlags = [filesInPath.isdir] & ~strcmp({filesInPath.name},'.') & ~strcmp({filesInPath.name},'..');
+    folderFlags = [filesInPath.isdir] & ~strncmp({filesInPath.name},'.',1);
     dataFolders = filesInPath(folderFlags);
     dataFolderNames = char2str({dataFolders.name})';
 end
@@ -58,8 +57,8 @@ newName             = dataFolderNames + namePart1 + '_padded' + namePart2;
 newNameINTERLACED   = dataFolderNames + namePart1 + '_interlaced' + namePart2;
 newNameADC          = dataFolderNames + namePart1 + '_ADC' + namePart2;
 newNameTS           = dataFolderNames + namePart1 + '_timestamps.mat';
-newNameMERGED       = ['data_merged', namePart2];
-newNameMETA         = 'merge_info.csv';
+newNameMERGED       = [opt.mergePrename '_data_merged', namePart2];
+newNameMETA         = [opt.mergePrename '_merge_info.csv'];
 
 % if user is specifying a path to the data folder - i.e. not current folder
 if ~isempty(pathToDataFolder)
@@ -90,26 +89,30 @@ if ~isempty(dataCh)
         tempData = int16(tempData);
         
         % interlacing, if the option was enabled
-        if interlaceCh
+        if opt.interlaceCh
             if isAnInteger(length(dataCh)/2) % is it an integer
-                tempData = zeros(length(dataCh)/2, size(tempData,2)*2 );
-                for kk=1:length(dataCh)/2
+                dataChL = length(dataCh)/2;
+                tempData = zeros(dataChL, size(tempData,2)*2 );
+                for kk=1:dataChL
                     tempData(kk,1:2:end) = tempData(kk,:);
-                    tempData(kk,2:2:end) = tempData(kk+(length(dataCh)/2),:);
+                    tempData(kk,2:2:end) = tempData(kk+(dataChL),:);
+                end
+                
+                if opt.overwriteFiles || ~isfile(newNameINTERLACED(ii))
+                    fileID = fopen(newNameINTERLACED(ii),'w');
+                    fileLock = 0;
+                else
+                    fileLock = 1;
                 end
             else
                 warning(['InterlaceCh set to 1, but not enough channels to'...
                     'interlace. Skipping interlacing...'])
             end
             
-            if overwriteFiles || ~isfile(newNameINTERLACED(ii))
-                fileID = fopen(newNameINTERLACED(ii),'w');
-                fileLock = 0;
-            else
-                fileLock = 1;
-            end
         else
-            if overwriteFiles || ~isfile(newName(ii))
+            opt.interlaceCh = 0;
+            dataChL = length(dataCh);
+            if opt.overwriteFiles || ~isfile(newName(ii))
                 fileID = fopen(newName(ii),'w');
                 fileLock = 0;
             else
@@ -117,9 +120,23 @@ if ~isempty(dataCh)
             end
         end
         
+        if opt.filt
+            if strcmpi(opt.mode, 'lowpass')
+                for jj=1:dataChL
+                    tempData(jj,:) = int16(double(tempData(jj,:))-...
+                        lowpass(double(tempData(jj,:)),opt.cutoff,opt.sRate*(opt.interlaceCh+1),'Steepness',0.99));
+                end
+            else
+                for jj=1:dataChL
+                    tempData(jj,:) = int16(highpass(double(tempData(jj,:)),...
+                        opt.cutoff,opt.sRate*(opt.interlaceCh+1),'Steepness',0.99));
+                end
+            end
+        end
+        
         % create new split data .bin file
         formattedData = ones(nChDesired,length(tempData),'int16');
-        formattedData(1:size(tempData,1),:) = tempData*(-1)^invertCh;
+        formattedData(1:size(tempData,1),:) = tempData*(-1)^opt.invertCh;
         formattedData = int16(formattedData);
 
         % save new split data .bin file, check for overwrites
@@ -134,14 +151,14 @@ if ~isempty(dataCh)
         end
         
         % save merged data, check for overwrites
-        if mergeCh
+        if opt.mergeCh
             % get size of each split
             fileSizeList(ii) = length(formattedData);
             
             if ~mergeLock
                 fileID = fopen(newNameMERGED,'a');
             elseif isfile(newNameMERGED)
-                if overwriteFiles
+                if opt.overwriteFiles
                     fileID = fopen(newNameMERGED,'w');
                     mergeLock = 0;
                 else
@@ -168,10 +185,13 @@ if ~isempty(dataCh)
     % save merging metadata, check for overwrites
     if ~mergeLock
         fileID = fopen(newNameMETA,'w');
-        formatSpec = '%s, is ,%.0f, samples long\n';
-        fprintf(fileID,formatSpec,[namePart1'; string(fileSizeList)]);
+        formatSpec = '%s, is ,%s, samples long\n';
+        printVar = strings(1,2*length(namePart1));
+        printVar(1:2:end) = namePart1;
+        printVar(2:2:end) = num2str(fileSizeList', '%.0f');
+        fprintf(fileID, formatSpec, printVar);
         fclose(fileID);
-    elseif mergeCh
+    elseif opt.mergeCh
         warning('File exists and will not be overwritten');
     end
 else
@@ -204,7 +224,7 @@ if ~isempty(adcCh)
         formattedADC = int16(formattedADC);
 
         % save new adc .bin file and timestamps, check for overwrites
-        if overwriteFiles || ~isfile(newNameADC(ii))
+        if opt.overwriteFiles || ~isfile(newNameADC(ii))
             fileID = fopen(newNameADC(ii),'w');
             fileLock = 0;
         else
@@ -227,6 +247,8 @@ if ~isempty(adcCh)
 else
     warning('Empty adcCh')
 end
+
+disp('OE data converted to .bin successfully!')
 end
 
 %%%% OPEN EPHYS DATA LOAD FUNCTION

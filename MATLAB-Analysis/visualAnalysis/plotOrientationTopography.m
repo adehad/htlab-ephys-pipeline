@@ -6,7 +6,7 @@ end
 
 %%
 for ii = selectUnits
-    singleUnit = double(s.(sprintf('unit_%02i',ii))); % get sing unit spikes
+    singleUnit = double(s.(sprintf('unit_%s',s.clusters(ii)))); % get sing unit spikes
     if ~isempty(singleUnit)
         % get spikes for full experiment
         singleUnit = singleUnit(m.pd(1) <= singleUnit & singleUnit <= m.pd(stim.repeatIndex(end)));
@@ -36,53 +36,56 @@ for ii = selectUnits
         lowerEdges = floor(spikePos/opt.sqSize)*opt.sqSize;
         uniqueLowerEdges = unique(lowerEdges,'rows');
         uniqueLowerEdges(isnan(uniqueLowerEdges(:,1)),:) = [];
-
+        
         if size(uniqueLowerEdges,1) > 1
-        
-        % group spikes within same bins and find their orientation angle
-        meanVectors = zeros(size(uniqueLowerEdges));
-        for jj = 1:size(uniqueLowerEdges,1)
-            sqIndex = ismember(lowerEdges,uniqueLowerEdges(jj,:),'rows');
-            meanVectors(jj,:) = mean(spikeVel(sqIndex,:),1);
-        end
-        
-        % find the mean orientation angle relative to which other angles are plotted
-        refAngle = atan2d(mean(meanVectors(:,2)), mean(meanVectors(:,1)));
-        
-        % find the relative orientation angles of each bin
-        meanAngles = atan2d(meanVectors(:,2), meanVectors(:,1));
-        meanAngles = meanAngles - refAngle;
-        
-        % lay out the mesh for the surface plot based on the centres of the bins
-        [X, Y] = meshgrid(unique(uniqueLowerEdges(:,1)), unique(sort(uniqueLowerEdges(:,2))));
-        X = X + opt.sqSize/2; Y = Y + opt.sqSize/2;
-        Z = nan(size(X));
-        
-        % find the locations of each relative orientation vector on the surface
-        zIdx = [];
-        [~,zIdx(:,1)] = ismember(uniqueLowerEdges(:,1), unique(uniqueLowerEdges(:,1)));
-        [~,zIdx(:,2)] = ismember(uniqueLowerEdges(:,2), unique(sort(uniqueLowerEdges(:,2))));
-        for jj = 1:size(zIdx,1)
-            Z(zIdx(jj,2),zIdx(jj,1)) = meanAngles(jj);
-        end
-        
-        % plot the surface
-        figure
-        set(gcf,'color','w');
-        surf(X,Y,Z);
-        colorbar
-        title(sprintf('unit\\_%02i',ii))
-        
-        % save figures
-        if saveFig
-            saveas(gcf, [opt.preName '_orientationTopo_unit_' num2str(ii) '_post'], 'epsc');
-            saveas(gcf, [opt.preName '_orientationTopo_unit_' num2str(ii) '_post'], 'fig');
-        end
+            
+            % group spikes within same bins and find their orientation angle
+            meanVectors = zeros(size(uniqueLowerEdges));
+            for jj = 1:size(uniqueLowerEdges,1)
+                sqIndex = ismember(lowerEdges,uniqueLowerEdges(jj,:),'rows');
+                meanVectors(jj,:) = mean(spikeVel(sqIndex,:),1);
+            end
+            
+            % find the mean orientation angle relative to which other angles are plotted
+            refAngle = atan2d(mean(meanVectors(:,2)), mean(meanVectors(:,1)));
+            
+            % find the relative orientation angles of each bin
+            meanAngles = atan2d(meanVectors(:,2), meanVectors(:,1));
+            meanAngles = meanAngles - refAngle;
+            
+            % lay out the mesh for the surface plot based on the centres of the bins
+            [X, Y] = meshgrid(unique(uniqueLowerEdges(:,1)), unique(sort(uniqueLowerEdges(:,2))));
+            X = X + opt.sqSize/2; Y = Y + opt.sqSize/2;
+            Z = nan(size(X));
+            
+            % find the locations of each relative orientation vector on the surface
+            zIdx = [];
+            [~,zIdx(:,1)] = ismember(uniqueLowerEdges(:,1), unique(uniqueLowerEdges(:,1)));
+            [~,zIdx(:,2)] = ismember(uniqueLowerEdges(:,2), unique(sort(uniqueLowerEdges(:,2))));
+            for jj = 1:size(zIdx,1)
+                Z(zIdx(jj,2),zIdx(jj,1)) = meanAngles(jj);
+            end
+            
+            % plot the surface
+            figure
+            set(gcf,'color','w');
+            surf(X,Y,Z);
+            colorbar
+            title(sprintf('unit\\_%s',s.clusters(ii)))
+            
+            % save figures
+            if saveFig == 2
+                export_fig(sprintf('%s_orientationTopo_unit_%s.eps',opt.preName,num2str(ii)))
+                saveas(gcf, join([opt.preName '_orientationTopo_unit_' s.clusters(ii)],''), 'fig');
+            elseif saveFig
+                saveas(gcf, join([opt.preName '_orientationTopo_unit_' s.clusters(ii)],''), 'epsc');
+                saveas(gcf, join([opt.preName '_orientationTopo_unit_' s.clusters(ii)],''), 'fig');
+            end
         else
-            warning(['Unit ' num2str(ii) ' has only one filled bin. Topography will not be plotted...']);
+            warning(['Unit ' s.clusters(ii) ' has only one filled bin. Topography will not be plotted...']);
         end
     else
-        warning(['Unit ' num2str(ii) ' has no spikes. A heatmap will not be plotted...']);
+        warning(['Unit ' s.clusters(ii) ' has no spikes. A heatmap will not be plotted...']);
     end
 end
 end

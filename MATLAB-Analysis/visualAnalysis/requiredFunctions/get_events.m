@@ -33,7 +33,7 @@ end;
 
 if thr > 0
 % events = find(diff(xi > thr) == 1) + 1;
-events = find(diff(xi > thr) > 0) + 1; %a spike event is when the signal crosses the thr value
+events = find(abs(diff(xi > thr)) > 0) + 1; %a spike event is when the signal crosses the thr value
 else
 events = find(diff(xi > thr) < 0) + 1; %a spike event is when the signal crosses the thr value    
 end
