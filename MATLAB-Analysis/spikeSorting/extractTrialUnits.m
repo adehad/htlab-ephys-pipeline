@@ -81,7 +81,7 @@ elseif strcmpi(sortedType,'klusta') % case insensitive srtcmp
     kwik_d=getKwikData(kwikFileName);
     spike_times = hdf5read(kwikFileName, '/channel_groups/0/spikes/time_samples');
     spike_clusters = hdf5read(kwikFileName, '/channel_groups/0/spikes/clusters/main');
-    clusters = [];
+    clusters = [];    cluster_groups_updated = [];
     if isempty(clusterType) % cluster types specified by input arguments - e.g. ['good';'unsorted']
         clusterType = ["good";"unsorted";"MUA"];
         warning('No cluster types specified to extract, defaulting to: good, unsorted, MUA')
@@ -90,14 +90,16 @@ elseif strcmpi(sortedType,'klusta') % case insensitive srtcmp
     for cc=1:size(clusterType,1)
         for ii=1:length(kwik_d)
             clu_type=cell2mat(kwik_d(ii).id(1,1));
-            if contains(clu_type, clusterType(cc,:)) % case insensitive compare
+            if contains(clu_type, clusterType(cc,:),'IgnoreCase',true) % case insensitive compare
                 clusters = [clusters kwik_d(ii).icell]; %accumulate only the good clusters
+                cluster_groups_updated = [cluster_groups_updated; clusterType(cc,:)];
             end
         end
     end
     s.clusters = num2str(clusters','%02i');      % storage of what clusters were kepts (note: transpose)
     s.clusters = string(s.clusters);            % convert to string for easy iteration
-
+    s.cluster_groups = cluster_groups_updated; % preserving the original allocations by storing this struct
+    
 else
     error(['sortedType provided does not match the accepted :', newline, ...
               ' ''kilosort'' ', newline,' ''klusta'' ' ]);
@@ -107,6 +109,7 @@ end
 % trials refer to the experiment binary files that were merged together
 
 n_trial=length(split_point);
+fileN = char(file(1,:));
 
 % split back into trials
 for tt=1:n_trial-1 % go through each trial
@@ -125,7 +128,7 @@ for tt=1:n_trial-1 % go through each trial
     % Create 2 digit IDss
         trialID = num2str(startTrial+tt-1,'%02i');
    
-    extractUnitsFileName = [file(1,1:6),'_',trialID,'_sorted.mat'];
+    extractUnitsFileName = [fileN(1,1:6),'_',trialID,'_sorted.mat'];
     save(extractUnitsFileName,'s','trial_spikes','trial_clusters') % save structure s, trial_cluster, and trial_spikes to each individiaul trial as yymmdd_nn_sorted.mat
     disp(['saved data for trial: ',trialID]);
     

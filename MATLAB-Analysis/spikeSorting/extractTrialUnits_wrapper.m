@@ -7,17 +7,17 @@ addpath(genpath('C:\Users\Daniel\Documents\GitHub\htlab-ephys-pipeline\MATLAB-An
 %% SECTION 1: Extracts spike times to _sortedmat
 sortedType = 'kilosort';            
 sortOutputFolder = 'K:\Ephys\181207\1\.07_08\preAutoMerge';
-file = '181207_78';
+file = "181207_78";
 startTrial = 1;
 mergedInfoCSV = 'K:\Ephys\181207\1\.07_08\07_08_filtered_merge_info.csv';
 clusterType = []; % good, unsorted, noise or [] (empty) (when there has been no manual sorting, there's only unsorted). 
                           % Arrays accepted e.g. ["good";"unsorted";"MUA"]
 filename.sortOutputAll = extractTrialUnits(sortedType,...           % sorting Program used
                                        sortOutputFolder, ...    % location of sorting output
-                                       file, ....               % ['YYMMDD' ; 'XYZ.kwik'] - XYZ.kwik is only if you are using klusta
+                                       file, ....               % ["YYMMDD" ; "XYZ.kwik"] - XYZ.kwik is only if you are using klusta
                                        startTrial, ...          % YYMMDD_X - where is is starting number
                                        mergedInfoCSV, ...       % Path + Name of merge_info.csv
-                                       clusterType);            % ['XYZ' ; 'ABC'] - rows containing different cluster types to keep - note: depends on your manual clustering - leave empty if you want to keep all of them
+                                       clusterType);            % ["XYZ" ; "ABC"] - rows containing different cluster types to keep - note: depends on your manual clustering - leave empty if you want to keep all of them
 % Select a single sortOutput
 filename.sortOutput = [sortOutputFolder, filesep, filename.sortOutputAll(1,:)];   
 %% SECTION 2: Establish Metafile struct
