@@ -56,7 +56,7 @@ if strcmpi(sortedType,'kilosort') % case insensitive srtcmp
        cluster_groups.group = cluster_groups.group';
     end
     %% Store info for desired clusters
-    clusters = [];
+    clusters = [];    cluster_groups_updated = [];
     if isempty(clusterType) % cluster types specified by input arguments - e.g. ['good';'unsorted']
         clusterType = ["good";"unsorted";"MUA"];
         warning('No cluster types specified to extract, defaulting to: good, unsorted, MUA')
@@ -66,12 +66,13 @@ if strcmpi(sortedType,'kilosort') % case insensitive srtcmp
         for ii=1:size(cluster_groups.cluster_id,1)
             if contains( cluster_groups.group(ii,:), clusterType(cc,:),'IgnoreCase',true )
                 clusters = [clusters cluster_groups.cluster_id(ii)]; %accumulate only the good clusters
+                cluster_groups_updated = [cluster_groups_updated; clusterType(cc,:)];
             end
         end
     end
     s.clusters = num2str(clusters','%02i');      % storage of what clusters were kepts (note: transpose)
     s.clusters = string(s.clusters);            % convert to string for easy iteration
-    s.cluster_groups = cluster_groups.group; % preserving the original allocations by storing this struct
+    s.cluster_groups = cluster_groups_updated; % preserving the original allocations by storing this struct
 
 
 elseif strcmpi(sortedType,'klusta') % case insensitive srtcmp
