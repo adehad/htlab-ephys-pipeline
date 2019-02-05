@@ -33,8 +33,8 @@ plot(diff(m.pd)); ylim([0 2e5]);
 %% SECTION 2: Add stimulus and projection data
 clear stim
 %%%%%%%%%%%%%%%%%%%%%%% IMPORTANT
-stim.StimGL_nloops = 16;     % number of loops in stimulus
-pdDiffThreshold = 1500;    % threshold of interval between loops
+stim.nLoopsPre = 16;           % number of loops in stimulus
+pdDiffThreshold = 1500;     % threshold of interval between loops
 %%%%%%%%%%%%%%%%%%%%%%%
 
 stim.C=0;
@@ -46,7 +46,7 @@ stim.H=91;                  % Height of the projection in mm
 stim.xPix = 480;            % xaxis pixel count
 stim.yPix = 640;            % yaxis pixel count
 
-stim = addProj2M(m, stim, pdDiffThreshold);
+stim = addProj2Stim(m, stim, pdDiffThreshold);
 
 %% SECTION 3: Save .mat
 save('181017_06_visual_pruned.mat', 'm', 's', 'stim', 'filename')

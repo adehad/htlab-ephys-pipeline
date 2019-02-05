@@ -28,11 +28,11 @@ for ii = selectUnits
     if ~isempty(singleUnit)
         spikeStack = [];
         
-        % get indices of spikes relative to repeatIndex starts and store in
+        % get indices of spikes relative to loopEndIdx starts and store in
         % a cell array for spike raster and a vector for spike histogram
         for jj=1:nLoops
-            %nextTrialShift = s.units{ii} - m.pd(stim.repeatIndex(jj) + 1);
-            tempShift = singleUnit - m.pd(stim.repeatIndex(jj) + 1);
+            %nextTrialShift = s.units{ii} - m.pd(stim.loopEndIdx(jj) + 1);
+            tempShift = singleUnit - m.pd(stim.loopEndIdx(jj) + 1);
             relSpikes = tempShift(tempShift>=0 & tempShift<=stimLength(jj));
             spikeTrain{jj} = relSpikes;
             spikeStack = [spikeStack; relSpikes];

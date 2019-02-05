@@ -6,7 +6,7 @@ for ii = selectUnits
     clear sqC sqMean
     if ~isempty(singleUnit)
         % get spikes for full experiment
-        singleUnit = singleUnit(m.pd(1) <= singleUnit & singleUnit <= m.pd(stim.repeatIndex(end)));
+        singleUnit = singleUnit(m.pd(1) <= singleUnit & singleUnit <= m.pd(stim.loopEndIdx(end)));
         
         % shift m.pd by the times of each spike to find out the index of last pd
         % event before the spike occurs. Introduce dragonfly neural latency

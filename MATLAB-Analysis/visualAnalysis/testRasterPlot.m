@@ -46,14 +46,14 @@ m.StimGL_nloops = nLoops; % Number of loops in stimGL
 
 pdDiff = double(diff(m.pd));
 pdDiffThreshold = 1.5e3; % during each repeat of the stimulus there is a repeated PD event, this threshold finds it
-[~, m.repeatIndex]=find(pdDiff>pdDiffThreshold);
-m.repeatIndex = [0, m.repeatIndex];
-if length(m.repeatIndex) > nLoops
-    m.stimLength = diff(m.pd(m.repeatIndex + 1)); % stimulus length of each repeat
+[~, m.loopEndIdx]=find(pdDiff>pdDiffThreshold);
+m.loopEndIdx = [0, m.loopEndIdx];
+if length(m.loopEndIdx) > nLoops
+    m.stimLength = diff(m.pd(m.loopEndIdx + 1)); % stimulus length of each repeat
 else
-    m.stimLength = diff([m.pd(m.repeatIndex + 1), m.pd(end)]); % stimulus length of each repeat
+    m.stimLength = diff([m.pd(m.loopEndIdx + 1), m.pd(end)]); % stimulus length of each repeat
 end
-m.repeatIndex = m.repeatIndex(1:nLoops);
+m.loopEndIdx = m.loopEndIdx(1:nLoops);
 m.stimLength = m.stimLength(1:nLoops);
 stimLengthSubFrames = size(m.stimXYPos,1);
 
@@ -70,7 +70,7 @@ RasterMask(spikes_fps(ind))=ones(1,size(ind,2));
 T=RasterMask; % linear raster array
 for re=2:nLoops
     RasterMask=zeros(1,stimLength);
-    temp=spikes_fps-round(m.pd(m.repeatIndex(re)+1)*180/30000);
+    temp=spikes_fps-round(m.pd(m.loopEndIdx(re)+1)*180/30000);
     ind=find(temp>0 & temp<stimLength);
     RasterMask(temp(ind))=ones(1,size(ind,2));
     T=[T RasterMask];

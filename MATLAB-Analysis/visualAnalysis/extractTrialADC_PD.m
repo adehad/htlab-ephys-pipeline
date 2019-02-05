@@ -48,8 +48,6 @@ end
  
 x = [];        
 pd = [];
-pdRise = [];
-pdFall = [];
 pwaves = [];
 
 % slong_srate = 1000; %Hz
@@ -144,8 +142,6 @@ disp('-----------------------------------------------------------')
 %% Save PD data to mat file
 
 m.pd = pd;
-%m.pdRise = pdRise;
-%m.pdFall = pdFall;
 
 %% Save to .mat File
 

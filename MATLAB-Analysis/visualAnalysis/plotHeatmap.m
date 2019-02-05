@@ -39,7 +39,7 @@ for ii = selectUnits
     clear sqC sqMean
     if ~isempty(singleUnit)
         % get spikes for full experiment
-        singleUnit = singleUnit(m.pd(1) <= singleUnit & singleUnit <= m.pd(stim.repeatIndex(end)));
+        singleUnit = singleUnit(m.pd(1) <= singleUnit & singleUnit <= m.pd(stim.loopEndIdx(end)));
         
         % shift m.pd by the times of each spike to find out the index of last pd
         % event before the spike occurs. Introduce dragonfly neural latency
@@ -47,7 +47,7 @@ for ii = selectUnits
         lastFrameIdx = ones(size(singleUnit));
         for kk = 1:length(singleUnit)
             shiftedPD = m.pd - singleUnit(kk);
-            lastFrameIdx(kk) = length(shiftedPD(shiftedPD <= 0)) + opt.tsdnLatency*m.sRateHz/1000;
+            lastFrameIdx(kk) = length(shiftedPD(shiftedPD <= 0));% + opt.tsdnLatency*m.sRateHz/1000;
         end
         
         % discard data in the corner of the screen where the target goes to

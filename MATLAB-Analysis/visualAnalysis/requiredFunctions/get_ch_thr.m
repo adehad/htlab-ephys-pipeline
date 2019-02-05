@@ -26,7 +26,7 @@ while cmd ~= 'a'
             if bgoff
                 xmu = mean(x(tch,:));
             else xmu = 0;
-            end;
+            end
             [events,waves,xi] = get_events(x,tch,f,10,10,thr,bgoff,recenter);
             clf;
             hold on
@@ -49,8 +49,8 @@ while cmd ~= 'a'
             title(sprintf('%s\nfound %d events',cmdlist,length(events)));
         case 'b'
             ndata = input(sprintf('Enter new data load block size (old= %d): ',ndata));
-    end;
+    end
     %     [x1,y1,cmd] = ginput2(1);
     cmd = input('next command: ','s');
-end;
+end
 fclose(fid);

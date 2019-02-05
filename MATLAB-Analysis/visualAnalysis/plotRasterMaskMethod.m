@@ -1,4 +1,4 @@
-function [] = plotRaster(m, s, stim, selectUnits, opt, saveFig)
+function [] = plotRasterMaskMethod(m, s, stim, selectUnits, opt, saveFig)
 %%%% getRaster
 %%%% A. Haddad, D. Ko, H. Lin
 %%%% INPUT:
@@ -21,18 +21,18 @@ end
 
 stimLength = stim.stimLength;
 maxStimLength = max(stimLength);
-nLoops = length(stim.repeatIndex);
+nLoops = length(stim.loopEndIdx);
 %% spike raster
 for ii = selectUnits
     if ~isempty(s.(sprintf('unit_%s',s.clusters(ii))))
         spikeLocations = [];
         T = [];
-        % get indices of spikes relative to repeatIndex starts and store in
+        % get indices of spikes relative to loopEndIdx starts and store in
         % a cell array for spike raster and a vector for spike histogram
         for jj=1:nLoops
-            %nextTrialShift = s.units{ii} - m.pd(stim.repeatIndex(jj) + 1);
+            %nextTrialShift = s.units{ii} - m.pd(stim.loopEndIdx(jj) + 1);
             rMask=zeros(1,stimLength(jj));
-            temp = double(s.(sprintf('unit_%s',s.clusters(ii)))) - m.pd(stim.repeatIndex(jj) + 1);
+            temp = double(s.(sprintf('unit_%s',s.clusters(ii)))) - m.pd(stim.loopEndIdx(jj) + 1);
             tempInd = find(temp>=0 & temp<=stimLength(jj));
             rMask(temp(tempInd))=ones(1,size(tempInd,2));
             spikeLocations = [spikeLocations; temp(tempInd)];

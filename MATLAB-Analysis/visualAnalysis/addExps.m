@@ -6,6 +6,6 @@ uiopen('*_visual.mat');
 s2 = s;
 stim2 = stim;
 m2 = m;
-stim.repeatIndex = [stim1.repeatIndex stim2.repeatIndex(2:end)+stim1.repeatIndex(end)];
+stim.loopEndIdx = [stim1.loopEndIdx stim2.loopEndIdx(2:end)+stim1.loopEndIdx(end)];
 stim.stimLength = [stim1.stimLength stim2.stimLength];
 stim.stimLength = [stim1.stimLength stim2.stimLength];

@@ -7,7 +7,7 @@ end
 for ii = selectUnits
     singleUnit = double(s.(sprintf('unit_%s',s.clusters(ii))));
     if ~isempty(singleUnit)
-        singleUnit = singleUnit(m.pd(1) <= singleUnit & singleUnit <= m.pd(stim.repeatIndex(end)));
+        singleUnit = singleUnit(m.pd(1) <= singleUnit & singleUnit <= m.pd(stim.loopEndIdx(end)));
         lastFrameIdx = ones(length(singleUnit) + 1,1);
         for kk = 1:length(singleUnit)
             shiftedPD = m.pd(lastFrameIdx(kk):end) - singleUnit(kk);
